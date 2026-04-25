@@ -1,0 +1,80 @@
+/* Configurações Gerais */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #000;
+    color: #fff;
+    overflow-x: hidden;
+}
+
+/* Barra Lateral (Sidebar) */
+.sidebar {
+    width: 220px;
+    height: 100vh;
+    background: #0a0a0a;
+    border-right: 1px solid rgba(250, 204, 21, 0.15);
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding: 25px;
+    z-index: 1000;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 40px;
+}
+
+.sidebar-logo {
+    width: 25px;
+    height: auto;
+}
+
+.brand-text {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 1px;
+}
+
+/* Links de Navegação */
+.nav-link-custom {
+    display: block;
+    color: #fff;
+    text-decoration: none;
+    margin: 18px 0;
+    font-size: 1rem;
+    opacity: 0.7;
+    transition: 0.3s;
+}
+
+.nav-link-custom:hover {
+    opacity: 1;
+    color: #facc15;
+    padding-left: 5px;
+}
+
+/* Área de Conteúdo Principal */
+.content {
+    margin-left: 220px; /* Respeita exatamente a largura da sidebar */
+    padding: 40px;
+    min-height: 100vh;
+    background: #000;
+    display: block; /* Garante que o conteúdo flua de cima para baixo */
+}
+
+/* Container das Páginas (Dashboard, Treinamentos, Relatórios) */
+.container-custom {
+    width: 100%;
+    max-width: 1200px; /* Limita a largura em telas muito grandes */
+    margin: 0; /* Alinha à esquerda do espaço disponível */
+}
+
+/* Utilitário para centralizar títulos se necessário */
+.text-center-custom {
+    text-align: center;
+    width: 100%;
+}

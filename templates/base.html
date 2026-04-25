@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}NPS{% endblock %}</title>
+    <link href="https://jsdelivr.net" rel="stylesheet">
+    <style>
+        body { margin: 0; background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; overflow-x: hidden; }
+        
+        .sidebar {
+            width: 220px;
+            height: 100vh;
+            background: #0a0a0a;
+            border-right: 1px solid rgba(250, 204, 21, 0.15);
+            position: fixed;
+            padding: 25px;
+            z-index: 100;
+        }
+
+        .sidebar-header { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
+        .sidebar-logo { width: 25px; height: auto; }
+        .brand-text { margin: 0; font-size: 1.4rem; font-weight: 700; color: #ffffff; letter-spacing: 1px; }
+
+        .nav-link-custom { 
+            display: block; color: #fff; text-decoration: none; 
+            margin: 18px 0; font-size: 1rem; opacity: 0.7; transition: 0.3s; 
+        }
+        .nav-link-custom:hover { opacity: 1; color: #facc15; padding-left: 5px; }
+
+        .content { margin-left: 220px; padding: 40px; min-height: 100vh; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <img src="{{ url_for('static', filename='logo.png') }}" class="sidebar-logo">
+            <h3 class="brand-text">NPS</h3>
+        </div>
+<nav>
+    <a href="/" class="nav-link-custom">Painel</a>
+    <a href="/treinamentos" class="nav-link-custom">Treinamentos</a>
+    <a href="/participantes" class="nav-link-custom">Participantes</a>
+    <a href="/relatorios" class="nav-link-custom">Relatórios</a>
+</nav>
+
+    </div>
+    <div class="content">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

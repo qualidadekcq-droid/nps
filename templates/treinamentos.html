@@ -1,0 +1,168 @@
+{% extends 'base.html' %} 
+
+{% block content %} 
+<style> 
+    /* Ajuste do Background */
+    .watermark-bg { 
+        position: fixed; 
+        top: 50%; 
+        left: calc(50% + 110px); 
+        transform: translate(-50%, -50%); 
+        width: 450px; 
+        opacity: 0.07; 
+        z-index: -1; 
+        pointer-events: none; 
+    } 
+
+    /* CORREÇÃO DO CONTAINER: Removido o margin auto e ajustado o preenchimento */
+    .container-custom { 
+        width: 100%;
+        max-width: 1200px; /* Aumentado para dar mais folga */
+        margin-left: 0;   /* Alinha à esquerda (já respeitando o margin da sidebar) */
+        padding-right: 40px; /* Respiro no lado direito */
+    } 
+
+    h1 { 
+        color: #facc15; 
+        font-weight: 800; 
+        letter-spacing: 3px; 
+        text-transform: uppercase; 
+        font-size: 2.2rem; 
+        text-align: center; 
+        margin-bottom: 30px; 
+    } 
+
+    .card-dark { 
+        background: #0a0a0a; 
+        border: 1px solid rgba(250, 204, 21, 0.2); 
+        border-radius: 16px; 
+        padding: 25px; 
+        margin-bottom: 30px; 
+    } 
+
+    h5 { color: #facc15; margin-bottom: 20px; font-weight: 700; text-transform: uppercase; font-size: 1rem; } 
+
+    .form-control-dark { 
+        background: #111; 
+        border: 1px solid #333; 
+        color: #fff; 
+        border-radius: 8px; 
+        padding: 10px; 
+        width: 100%; 
+        margin-bottom: 15px; 
+    } 
+
+    .form-control-dark:focus { border-color: #facc15; outline: none; background: #151515; } 
+
+    .btn-save { 
+        background: #facc15; 
+        color: #000; 
+        font-weight: 800; 
+        border: none; 
+        padding: 12px; 
+        border-radius: 8px; 
+        width: 100%; 
+        transition: 0.3s; 
+    } 
+
+    .btn-save:hover { background: #fff; transform: scale(1.02); } 
+
+    .table-custom { width: 100%; color: #fff; border-collapse: separate; border-spacing: 0 10px; } 
+
+    .table-custom th { 
+        color: #facc15; 
+        text-transform: uppercase; 
+        font-size: 0.8rem; 
+        padding: 10px; 
+        border-bottom: 2px solid #222; 
+    } 
+
+    .table-custom td { 
+        background: #0a0a0a; 
+        padding: 15px; 
+        border-top: 1px solid #1a1a1a; 
+        border-bottom: 1px solid #1a1a1a; 
+    } 
+</style> 
+
+<img src="{{ url_for('static', filename='logo.png') }}" class="watermark-bg"> 
+
+<div class="container-custom"> 
+    <h1>TREINAMENTOS</h1> 
+
+    <!-- FORMULÁRIO DE CADASTRO --> 
+    <div class="card-dark"> 
+        <h5>➕ Cadastrar Novo Treinamento</h5> 
+        <form action="/cadastrar-treinamento" method="POST"> 
+            <div class="row"> 
+                <div class="col-md-6"> 
+                    <input type="text" name="titulo" class="form-control-dark" placeholder="Título do Treinamento" required> 
+                </div> 
+                <div class="col-md-3"> 
+                    <input type="text" name="instrutor" class="form-control-dark" placeholder="Nome do Instrutor"> 
+                </div> 
+                <div class="col-md-3"> 
+                    <input type="date" name="data_treinamento" class="form-control-dark" required> 
+                </div> 
+            </div> 
+            <div class="row"> 
+                <div class="col-md-3"> 
+                    <input type="text" name="setor" class="form-control-dark" placeholder="Setor"> 
+                </div> 
+                <div class="col-md-6"> 
+                    <input type="text" name="descricao" class="form-control-dark" placeholder="Pequena descrição ou tema"> 
+                </div> 
+                <div class="col-md-3"> 
+                    <button type="submit" class="btn-save">SALVAR NO BANCO</button> 
+                </div> 
+            </div> 
+        </form> 
+    </div> 
+
+    <!-- LISTA DE TREINAMENTOS --> 
+    <div class="card-dark"> 
+        <h5>📋 Histórico de Treinamentos</h5> 
+        <div class="table-responsive"> 
+            <table class="table-custom"> 
+                <thead> 
+                    <tr> 
+                        <th>Título</th> 
+                        <th>Instrutor / Setor</th> 
+                        <th>Data</th> 
+                        <th class="text-end">Ações</th> 
+                    </tr> 
+                </thead> 
+                <tbody> 
+                    {% if treinamentos %}
+                        {% for t in treinamentos %} 
+                        <tr> 
+                            <td class="fw-bold">{{ t.titulo }}</td> 
+                            <td><small class="opacity-75">{{ t.instrutor if t.instrutor else '-' }}</small> <br> 
+                                <span class="badge bg-dark text-warning" style="font-size: 0.6rem;">{{ t.setor if t.setor else 'Geral' }}</span>
+                            </td> 
+                            <td>{{ t.data_treinamento }}</td> 
+                            <td class="text-end"> 
+                                <button class="btn btn-sm btn-outline-warning" onclick="copyLink('{{ t.id }}')">🔗 Copiar Link</button> 
+                            </td> 
+                        </tr> 
+                        {% endfor %} 
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center opacity-50">Nenhum treinamento cadastrado ainda.</td>
+                        </tr>
+                    {% endif %}
+                </tbody> 
+            </table> 
+        </div> 
+    </div> 
+</div> 
+
+<script> 
+    function copyLink(id) { 
+        const link = window.location.origin + "/pesquisa?id_treino=" + id; 
+        navigator.clipboard.writeText(link).then(() => { 
+            alert("Link de pesquisa copiado com sucesso!\n\n" + link); 
+        }); 
+    } 
+</script> 
+{% endblock %}

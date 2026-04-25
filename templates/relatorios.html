@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .watermark-bg {
+        position: fixed;
+        top: 50%;
+        left: calc(50% + 110px);
+        transform: translate(-50%, -50%);
+        width: 450px;
+        opacity: 0.07;
+        z-index: -1;
+        pointer-events: none;
+    }
+
+    .container-custom {
+        text-align: center;
+        padding-right: 20px;
+    }
+
+    h1 {
+        color: #facc15;
+        font-weight: 800;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        font-size: 2.5rem;
+        margin-bottom: 5px;
+    }
+
+    .subtitle {
+        opacity: 0.7;
+        margin-bottom: 30px;
+        font-size: 0.9rem;
+    }
+
+    /* CONTAINER FLEXÍVEL PARA OS CARDS */
+    .report-flex-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 25px;
+        justify-content: center;
+        margin-bottom: 50px;
+        margin-top: 30px;
+    }
+
+    .report-card {
+        background: #0a0a0a;
+        border: 1px solid rgba(250, 204, 21, 0.2);
+        border-radius: 16px;
+        padding: 25px;
+        text-align: left;
+        width: 320px; /* Tamanho fixo para os 3 ficarem idênticos */
+        min-height: 220px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: 0.3s;
+    }
+
+    .report-card:hover {
+        border-color: #facc15;
+        background: rgba(250, 204, 21, 0.05);
+        transform: translateY(-5px);
+    }
+
+    .btn-download {
+        background: #facc15;
+        color: #000;
+        border: none;
+        padding: 10px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        width: 100%;
+        transition: 0.2s;
+    }
+
+    .btn-download:hover {
+        background: #fff;
+    }
+
+    /* Mural de Feedbacks */
+    .feedback-wall {
+        background: #0a0a0a;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 30px;
+        text-align: left;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        max-width: 1010px; /* Alinhado com a largura dos 3 cards + gaps */
+        margin: 0 auto;
+    }
+
+    .comment-bubble {
+        background: rgba(255, 255, 255, 0.03);
+        padding: 20px;
+        border-radius: 0 15px 15px 15px;
+        margin-bottom: 20px;
+        transition: 0.3s;
+    }
+
+    .bubble-positive { border-left: 5px solid #2ecc71; }
+    .bubble-neutral { border-left: 5px solid #facc15; }
+    .bubble-negative { border-left: 5px solid #ff4d4d; }
+
+    .comment-meta {
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .comment-text { font-style: italic; opacity: 0.9; line-height: 1.5; font-size: 0.95rem; }
+    .badge-nota { padding: 2px 8px; border-radius: 5px; font-size: 0.7rem; }
+</style>
+
+<img src="{{ url_for('static', filename='logo.png') }}" class="watermark-bg">
+
+<div class="container-custom">
+    <h1>RELATÓRIOS</h1>
+    <div class="subtitle">Exporte os dados consolidados ou analise a voz dos colaboradores</div>
+
+    <div class="report-flex-row">
+        <div class="report-card">
+            <div>
+                <span style="color: #facc15; font-weight: bold;">📊 NPS Mensal</span>
+                <p style="font-size: 0.85rem; opacity: 0.7; margin-top: 10px;">Resumo completo do NPS de todos os treinamentos do período.</p>
+            </div>
+            <button class="btn-download">Baixar PDF</button>
+        </div>
+
+        <div class="report-card">
+            <div>
+                <span style="color: #facc15; font-weight: bold;">📝 Comentários Detalhados</span>
+                <p style="font-size: 0.85rem; opacity: 0.7; margin-top: 10px;">Lista de todos os feedbacks qualitativos em formato Excel.</p>
+            </div>
+            <button class="btn-download">Baixar Excel</button>
+        </div>
+
+        <div class="report-card">
+            <div>
+                <span style="color: #facc15; font-weight: bold;">🏆 Ranking de Performance</span>
+                <p style="font-size: 0.85rem; opacity: 0.7; margin-top: 10px;">Comparativo de satisfação entre instrutores e cursos.</p>
+            </div>
+            <button class="btn-download">Visualizar Agora</button>
+        </div>
+    </div>
+
+    <div class="feedback-wall">
+        <h5 class="mb-4" style="color: #facc15; font-weight: 700; letter-spacing: 1px;">📣 VOZ DO COLABORADOR (Últimos Feedbacks)</h5>
+        
+        {% if feedbacks %}
+            {% for f in feedbacks %}
+            <div class="comment-bubble 
+                {% if f.nota >= 9 %}bubble-positive 
+                {% elif f.nota >= 7 %}bubble-neutral 
+                {% else %}bubble-negative{% endif %}">
+                <div class="comment-meta">
+                    <span>📍 {{ f.titulo }}</span>
+                    <span class="badge-nota {% if f.nota >= 9 %}bg-success{% elif f.nota >= 7 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                        Nota: {{ f.nota }}
+                    </span>
+                </div>
+                <div class="comment-text">"{{ f.comentario }}"</div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-center opacity-50 py-4">Aguardando novos feedbacks para exibir o mural...</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

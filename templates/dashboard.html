@@ -1,0 +1,167 @@
+{% extends 'base.html' %} 
+
+{% block content %} 
+<style> 
+    /* Ajuste do Background Marca d'água */
+    .watermark-bg { 
+        position: fixed; 
+        top: 50%; 
+        left: calc(50% + 110px); 
+        transform: translate(-50%, -50%); 
+        width: 450px; 
+        opacity: 0.07; 
+        z-index: -1; 
+        pointer-events: none; 
+    } 
+
+    /* CORREÇÃO DO CONTAINER: Respeita o espaço da sidebar e centraliza no espaço útil */
+    .dashboard-container { 
+        width: 100%;
+        max-width: 1200px; 
+        margin-left: 0;   /* Alinha à esquerda do espaço disponível após a sidebar */
+        padding-right: 40px; /* Evita colar na borda direita */
+        text-align: center; 
+    } 
+
+    h1 { 
+        color: #facc15; 
+        font-weight: 800; 
+        letter-spacing: 3px; 
+        text-transform: uppercase; 
+        font-size: 2.5rem; 
+        margin-bottom: 5px; 
+    } 
+
+    .subtitle { 
+        opacity: 0.8; 
+        margin-bottom: 40px; 
+        font-size: 0.95rem; 
+    } 
+
+    /* Cards Principais */ 
+    .card-box { 
+        background: #0a0a0a; 
+        border: 1px solid rgba(250, 204, 21, 0.25); 
+        border-radius: 16px; 
+        padding: 25px; 
+        transition: 0.3s; 
+        cursor: pointer; 
+        height: 100%; 
+    } 
+    .card-box:hover { 
+        transform: translateY(-5px); 
+        border-color: #facc15; 
+    } 
+    .card-box h4 { 
+        font-size: 0.85rem; 
+        color: #facc15; 
+        margin-bottom: 12px; 
+        font-weight: 700; 
+        text-transform: uppercase; 
+    } 
+    .card-box p { 
+        font-size: 2.3rem; 
+        font-weight: 800; 
+        margin: 0; 
+        color: #fff; 
+    } 
+
+    /* Insights Rápidos */ 
+    .insight-card { 
+        background: rgba(255, 255, 255, 0.03); 
+        border: 1px solid rgba(255, 255, 255, 0.1); 
+        border-radius: 12px; 
+        padding: 15px; 
+        text-align: left; 
+        transition: 0.3s; 
+    } 
+    .insight-card:hover { 
+        background: rgba(250, 204, 21, 0.05); 
+        border-color: rgba(250, 204, 21, 0.3); 
+    } 
+    .insight-title { 
+        color: #aaa; 
+        font-size: 0.75rem; 
+        text-transform: uppercase; 
+        font-weight: 700; 
+        margin-bottom: 5px; 
+        display: block; 
+    } 
+    .insight-value { 
+        color: #facc15; 
+        font-weight: 800; 
+        font-size: 1.1rem; 
+        display: block; 
+    } 
+    .insight-label { 
+        font-size: 0.8rem; 
+        opacity: 0.6; 
+    } 
+</style> 
+
+<img src="{{ url_for('static', filename='logo.png') }}" class="watermark-bg"> 
+
+<div class="dashboard-container"> 
+    <h1>PAINEL</h1> 
+    <div class="subtitle">Acompanhamento geral de satisfação e insights de performance</div> 
+
+    <!-- Cards Principais --> 
+    <div class="row g-4 justify-content-center mb-5"> 
+        <div class="col-md-4"> 
+            <div class="card-box"> 
+                <h4>Total Respostas</h4> 
+                <p>{{ total_respostas }}</p> 
+            </div> 
+        </div> 
+        <div class="col-md-4"> 
+            <div class="card-box"> 
+                <h4>NPS Geral</h4> 
+                <p class="text-warning">{{ nps_geral }}</p> 
+            </div> 
+        </div> 
+        <div class="col-md-4"> 
+            <div class="card-box"> 
+                <h4>Média Instrutores</h4> 
+                <p>{{ media_instrutores }}</p> 
+            </div> 
+        </div> 
+    </div> 
+
+    <!-- Seção de Insights Rápidos --> 
+    <h5 class="text-start mb-3" style="color: #facc15; letter-spacing: 1px; font-weight: 700; padding-left: 10px;">💡 INSIGHTS RÁPIDOS</h5> 
+    <div class="row g-3"> 
+        <!-- Melhor Instrutor --> 
+        <div class="col-md-3"> 
+            <div class="insight-card"> 
+                <span class="insight-title">🏆 Melhor Instrutor</span> 
+                <span class="insight-value">{{ top_instrutor }}</span> 
+                <span class="insight-label">Nota: {{ top_instrutor_nota }}</span> 
+            </div> 
+        </div> 
+        <!-- Treinamento Destaque --> 
+        <div class="col-md-3"> 
+            <div class="insight-card"> 
+                <span class="insight-title">⭐ Destaque Positivo</span> 
+                <span class="insight-value">{{ top_treinamento }}</span> 
+                <span class="insight-label">Maior NPS</span> 
+            </div> 
+        </div> 
+        <!-- Pior NPS (Alerta) --> 
+        <div class="col-md-3"> 
+            <div class="insight-card"> 
+                <span class="insight-title" style="color: #ff4d4d;">⚠️ Pior Desempenho</span> 
+                <span class="insight-value" style="color: #fff;">{{ pior_treinamento }}</span> 
+                <span class="insight-label">NPS: {{ pior_nps }}</span> 
+            </div> 
+        </div> 
+        <!-- Aplicabilidade --> 
+        <div class="col-md-3"> 
+            <div class="insight-card"> 
+                <span class="insight-title">🛠️ Aplicabilidade</span> 
+                <span class="insight-value">{{ media_aplicabilidade }}</span> 
+                <span class="insight-label">Média Geral</span> 
+            </div> 
+        </div> 
+    </div> 
+</div> 
+{% endblock %}

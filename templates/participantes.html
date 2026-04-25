@@ -1,0 +1,191 @@
+{% extends 'base.html' %} 
+
+{% block content %} 
+<style> 
+    .watermark-bg { 
+        position: fixed; 
+        top: 50%; 
+        left: calc(50% + 110px); 
+        transform: translate(-50%, -50%); 
+        width: 450px; 
+        opacity: 0.07; 
+        z-index: -1; 
+        pointer-events: none; 
+    } 
+
+    /* CORREÇÃO DO LAYOUT: Alinhamento respeitando a sidebar */
+    .container-custom { 
+        width: 100%;
+        max-width: 1200px; 
+        margin-left: 0;   /* Garante que o conteúdo comece após a sidebar */
+        padding-right: 40px; 
+    } 
+
+    h1 { 
+        color: #facc15; 
+        font-weight: 800; 
+        letter-spacing: 3px; 
+        text-transform: uppercase; 
+        font-size: 2.5rem; 
+        text-align: center; 
+        margin-bottom: 20px;
+    } 
+
+    .card-dark { 
+        background: #0a0a0a; 
+        border: 1px solid rgba(250, 204, 21, 0.2); 
+        border-radius: 16px; 
+        padding: 25px; 
+        margin-bottom: 20px; 
+        height: 100%; 
+    } 
+
+    h5 { color: #facc15; margin-bottom: 15px; font-weight: 700; text-transform: uppercase; font-size: 1rem; } 
+
+    .form-control-dark { 
+        background: #111; 
+        border: 1px solid #333; 
+        color: #fff; 
+        border-radius: 8px; 
+        padding: 10px; 
+        width: 100%; 
+    } 
+
+    .form-control-dark:focus { border-color: #facc15; outline: none; background: #151515; } 
+
+    .btn-wa-mass { 
+        background: #25d366; 
+        color: white; 
+        border: none; 
+        padding: 10px 20px; 
+        border-radius: 8px; 
+        font-size: 0.85rem; 
+        font-weight: 700; 
+        cursor: pointer; 
+        transition: 0.3s; 
+    } 
+    .btn-wa-mass:hover { background: #128c7e; transform: scale(1.05); } 
+
+    textarea.form-control-dark { min-height: 100px; resize: vertical; } 
+
+    .table-mass { width: 100%; color: #fff; margin-top: 15px; } 
+    .table-mass th { color: #facc15; padding: 12px; border-bottom: 2px solid #222; font-size: 0.8rem; } 
+    .table-mass td { padding: 12px; border-bottom: 1px solid #111; } 
+</style> 
+
+<img src="{{ url_for('static', filename='logo.png') }}" class="watermark-bg"> 
+
+<div class="container-custom"> 
+    <h1>PARTICIPANTES</h1> 
+
+    <div class="row g-4 mb-4"> 
+        <!-- 1. IMPORTAÇÃO EXCEL --> 
+        <div class="col-lg-4"> 
+            <div class="card-dark"> 
+                <h5>1. Importar Excel</h5> 
+                <form action="/importar-presenca" method="POST" enctype="multipart/form-data"> 
+                    <input type="file" name="file" id="fileInput" hidden accept=".xlsx, .xls, .csv"> 
+                    <button type="button" class="btn btn-outline-warning w-100 mb-3" onclick="document.getElementById('fileInput').click()">📁 Selecionar Arquivo</button> 
+                    <button type="submit" class="btn btn-warning w-100 font-weight-bold">Subir Planilha</button> 
+                </form> 
+            </div> 
+        </div> 
+
+        <!-- 2. CADASTRO MANUAL --> 
+        <div class="col-lg-8"> 
+            <div class="card-dark"> 
+                <h5>2. Adicionar Manualmente</h5> 
+                <div class="row g-2"> 
+                    <div class="col-md-4"> 
+                        <input type="text" id="manualNome" class="form-control-dark" placeholder="Nome Completo"> 
+                    </div> 
+                    <div class="col-md-4"> 
+                        <input type="text" id="manualTema" class="form-control-dark" placeholder="Tema Treinamento"> 
+                    </div> 
+                    <div class="col-md-4"> 
+                        <input type="text" id="manualFone" class="form-control-dark" placeholder="WhatsApp (DDD+Número)"> 
+                    </div> 
+                </div> 
+                <button onclick="adicionarParticipante()" class="btn btn-sm btn-outline-light mt-3 w-100">+ Adicionar à Lista</button> 
+            </div> 
+        </div> 
+    </div> 
+
+    <!-- 3. COMPOSIÇÃO DA MENSAGEM --> 
+    <div class="card-dark mb-4"> 
+        <h5>3. Configurar Mensagem de Envio</h5> 
+        <textarea class="form-control-dark mb-3" id="msgTexto">Boa tarde {nome}! Gostariamos que participasse de uma pesquisa sobre o treinamento de {tema} que acabou de participar. O link abaixo direciona a pesquisa, que é totalmente anônima. Recursos Humanos Cacique.</textarea> 
+        <input type="text" class="form-control-dark" id="msgLink" placeholder="Link da Pesquisa (ex: forms.gle/...)"> 
+    </div> 
+
+    <!-- LISTA DE DISPARO --> 
+    <div class="card-dark"> 
+        <h5>Lista de Envio</h5> 
+        <div class="table-responsive"> 
+            <table class="table-mass"> 
+                <thead> 
+                    <tr> 
+                        <th>Nome</th> 
+                        <th>Tema</th> 
+                        <th>WhatsApp</th> 
+                        <th class="text-end">Ação</th> 
+                    </tr> 
+                </thead> 
+                <tbody id="corpoTabela"> 
+                    {% if participantes_importados %} 
+                        {% for p in participantes_importados %} 
+                        <tr> 
+                            <td>{{ p.nome }}</td> 
+                            <td>{{ p.tema if p.tema else '-' }}</td> 
+                            <td>{{ p.whatsapp }}</td> 
+                            <td class="text-end"> 
+                                <button onclick="enviarWA('{{ p.nome }}', '{{ p.whatsapp }}', '{{ p.tema }}')" class="btn-wa-mass">Enviar</button> 
+                            </td> 
+                        </tr> 
+                        {% endfor %} 
+                    {% endif %} 
+                </tbody> 
+            </table> 
+        </div> 
+    </div> 
+</div> 
+
+<script> 
+    function adicionarParticipante() { 
+        const nome = document.getElementById('manualNome').value; 
+        const tema = document.getElementById('manualTema').value; 
+        const fone = document.getElementById('manualFone').value; 
+
+        if(!nome || !fone) { alert("Nome e Telefone são obrigatórios!"); return; } 
+
+        const tabela = document.getElementById('corpoTabela'); 
+        const novaLinha = ` 
+            <tr> 
+                <td>${nome}</td> 
+                <td>${tema}</td> 
+                <td>${fone}</td> 
+                <td class="text-end"> 
+                    <button onclick="enviarWA('${nome}', '${fone}', '${tema}')" class="btn-wa-mass">Enviar</button> 
+                </td> 
+            </tr> 
+        `; 
+        tabela.innerHTML += novaLinha; 
+        document.getElementById('manualNome').value = ""; 
+        document.getElementById('manualTema').value = ""; 
+        document.getElementById('manualFone').value = ""; 
+    } 
+
+    function enviarWA(nomeCompleto, fone, tema) { 
+        const primeiroNome = nomeCompleto.trim().split(' ')[0]; 
+        let msg = document.getElementById('msgTexto').value; 
+        
+        msg = msg.replace("{nome}", primeiroNome).replace("{tema}", tema || "Treinamento"); 
+        
+        const link = document.getElementById('msgLink').value; 
+        if(link) msg += "\n\nLink: " + link; 
+
+        // Fix: adicionada a barra após wa.me
+        window.open(`https://wa.me{fone}?text=${encodeURIComponent(msg)}`, '_blank'); 
+    } 
+</script> 
+{% endblock %}

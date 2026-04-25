@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - NPS</title>
+    <link href="https://jsdelivr.net" rel="stylesheet">
+    <style>
+        body { background: #000; color: #fff; height: 100vh; display: flex; align-items: center; justify-content: center; font-family: sans-serif; }
+        .login-card { background: #0a0a0a; border: 1px solid rgba(250, 204, 21, 0.3); padding: 40px; border-radius: 20px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.8); }
+        .form-control { background: #111; border: 1px solid #333; color: #fff; margin-bottom: 20px; padding: 12px; }
+        .form-control:focus { background: #151515; border-color: #facc15; color: #fff; box-shadow: none; }
+        .btn-login { background: #facc15; color: #000; font-weight: 800; border: none; width: 100%; padding: 12px; border-radius: 10px; transition: 0.3s; }
+        .btn-login:hover { background: #fff; transform: translateY(-3px); }
+        .error-msg { color: #ff4d4d; font-size: 0.85rem; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <img src="{{ url_for('static', filename='logo.png') }}" style="width: 50px; margin-bottom: 20px;">
+        <h3 style="color: #facc15; font-weight: 800; margin-bottom: 25px;">ACESSO RH</h3>
+        
+        <form action="/login" method="POST">
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                {% for message in messages %}
+                  <div class="error-msg">{{ message }}</div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+            
+            <input type="email" name="email" class="form-control" placeholder="E-mail" required>
+            <input type="password" name="password" class="form-control" placeholder="Senha" required>
+            <button type="submit" class="btn-login">ENTRAR</button>
+        </form>
+    </div>
+</body>
+</html>
