@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from supabase import create_client
 from werkzeug.security import generate_password_hash, check_password_hash
+import time
 import os
 
 app = Flask(__name__)
@@ -11,12 +12,14 @@ supabase = create_client(
     os.getenv("SUPABASE_KEY")
 )
 # --- FILTRO DE SEGURANÇA ---
+from functools import wraps
+
 def login_required(f):
+    @wraps(f)
     def wrap(*args, **kwargs):
         if 'user_id' not in session:
             return redirect(url_for('login'))
         return f(*args, **kwargs)
-    wrap.__name__ = f.__name__
     return wrap
 
 # --- ROTAS DE ACESSO ---
@@ -27,7 +30,7 @@ def login():
         email = request.form.get('email')
         senha = request.form.get('password')
         
-        user = supabase.table("usuarios").select("*").eq("email", email).execute()
+        user = supabase.table("usuarios").select("id,nome,senha_hash").eq("email", email).execute()
         
         if user.data and check_password_hash(user.data[0]['senha_hash'], senha):
             session['user_id'] = user.data[0]['id']
@@ -43,78 +46,34 @@ def logout():
     return redirect(url_for('login'))
 
 # --- ROTAS PROTEGIDAS (Adicione @login_required em todas) ---
-
 @app.route("/")
 @login_required
 def home():
     try:
-        # 1. Busca todas as respostas e treinamentos
-        resp = supabase.table("respostas").select("nota, instrutor, aplicabilidade, treinamento_id").execute()
-        respostas = resp.data
-        
-        treinos_query = supabase.table("treinamentos").select("id, titulo, instrutor").execute()
-        treinos_lista = treinos_query.data
-        dict_treinos = {t['id']: t for t in treinos_lista}
+        resumo = supabase.table("dashboard_resumo").select("*").single().execute()
+        ranking = supabase.table("dashboard_ranking").select("*").single().execute()
 
-        if respostas:
-            total_resp = len(respostas)
-            
-            # Cálculo NPS Geral
-            promotores = len([r for r in respostas if r['nota'] >= 9])
-            detratores = len([r for r in respostas if r['nota'] <= 6])
-            nps_geral = round(((promotores - detratores) / total_resp) * 100)
+        r = resumo.data
+        k = ranking.data
 
-            # Médias Globais
-            media_inst_val = round(sum(r['instrutor'] for r in respostas) / total_resp, 1)
-            media_app_val = round(sum(r['aplicabilidade'] for r in respostas) / total_resp, 1)
+        dados = {
+            "total_respostas": r["total_respostas"],
+            "nps_geral": r["nps_geral"],
+            "media_instrutores": f'{r["media_instrutores"]} / 5',
+            "media_aplicabilidade": f'{r["media_aplicabilidade"]} / 5',
 
-            # --- Lógica de Ranking para Insights ---
-            stats_por_treino = {}
-            for r in respostas:
-                tid = r['treinamento_id']
-                if tid not in stats_por_treino: stats_por_treino[tid] = []
-                stats_por_treino[tid].append(r['nota'])
+            "top_instrutor": k["top_instrutor"],
+            "top_instrutor_nota": "---",
 
-            # Calcula NPS de cada um para achar o melhor e o pior
-            ranking = []
-            for tid, notas in stats_por_treino.items():
-                p = len([n for n in notas if n >= 9])
-                d = len([n for n in notas if n <= 6])
-                nps_t = round(((p - d) / len(notas)) * 100)
-                ranking.append({
-                    "titulo": dict_treinos.get(tid, {}).get('titulo', 'Desconhecido'),
-                    "nps": nps_t,
-                    "instrutor": dict_treinos.get(tid, {}).get('instrutor', 'N/A')
-                })
-
-            ranking_ordenado = sorted(ranking, key=lambda x: x['nps'], reverse=True)
-            
-            top_treino = ranking_ordenado[0]['titulo']
-            melhor_inst = ranking_ordenado[0]['instrutor']
-            pior_treino = ranking_ordenado[-1]['titulo']
-            pior_nps_val = ranking_ordenado[-1]['nps']
-        else:
-            # Valores padrão caso o banco esteja vazio
-            total_resp, nps_geral, media_inst_val, media_app_val = 0, 0, 0, 0
-            top_treino, melhor_inst, pior_treino, pior_nps_val = "---", "---", "---", "---"
-
-        dados_painel = {
-            "total_respostas": total_resp,
-            "nps_geral": nps_geral,
-            "media_instrutores": f"{media_inst_val} / 5",
-            "media_aplicabilidade": f"{media_app_val} / 5",
-            "top_instrutor": melhor_inst,
-            "top_instrutor_nota": f"{media_inst_val}/5",
-            "top_treinamento": top_treino,
-            "pior_treinamento": pior_treino,
-            "pior_nps": pior_nps_val
+            "top_treinamento": k["top_treinamento"],
+            "pior_treinamento": k["pior_treinamento"],
+            "pior_nps": k["pior_nps"]
         }
-        
-        return render_template("dashboard.html", **dados_painel)
+
+        return render_template("dashboard.html", **dados)
 
     except Exception as e:
-        print(f"Erro no Dashboard: {e}")
-        return "Erro ao carregar dados. Verifique o console."
+        return str(e)
 
 @app.route('/cadastrar-treinamento', methods=['POST'])
 @login_required # Adicione isso se você quiser que só quem logou possa cadastrar
@@ -144,7 +103,7 @@ def cadastrar_treinamento():
 @app.route('/treinamentos')
 @login_required
 def treinamentos():
-    resposta = supabase.table("treinamentos").select("*").order("created_at", desc=True).execute()
+    resposta = supabase.table("treinamentos").select("id,titulo,instrutor,setor,data_treinamento,status").order("created_at", desc=True).execute()
     return render_template('treinamentos.html', treinamentos=resposta.data)
 
 @app.route('/participantes')
@@ -176,8 +135,10 @@ def salvar_pesquisa():
         "aplicabilidade": int(request.form.get('aplicabilidade', 0)),
         "instrutor": int(request.form.get('instrutor', 0))
     }
+
     supabase.table("respostas").insert(dados).execute()
+
     return "<h1>Obrigado pelo seu feedback!</h1>"
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
