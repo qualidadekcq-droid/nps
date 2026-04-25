@@ -1,16 +1,15 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
-from supabase import create_client, Client
-from config import Config
+from supabase import create_client
 from werkzeug.security import generate_password_hash, check_password_hash
-import pandas as pd
+import os
 
 app = Flask(__name__)
-app.config.from_object(Config)
-app.secret_key = 'sua_chave_secreta_muito_segura' # Mude isso!
+app.secret_key = os.getenv("SECRET_KEY")
 
-# Conexão Supabase
-supabase: Client = create_client(app.config["SUPABASE_URL"], app.config["SUPABASE_KEY"])
-
+supabase = create_client(
+    os.getenv("SUPABASE_URL"),
+    os.getenv("SUPABASE_KEY")
+)
 # --- FILTRO DE SEGURANÇA ---
 def login_required(f):
     def wrap(*args, **kwargs):
