@@ -6,6 +6,9 @@ import os
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SECURE"] = True   # se usa HTTPS
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 supabase = create_client(
     os.getenv("SUPABASE_URL"),
@@ -44,6 +47,49 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for('login'))
+@app.route("/trocar-senha", methods=["GET", "POST"])
+@login_required
+def trocar_senha():
+    if request.method == "POST":
+        senha_atual = request.form.get("senha_atual")
+        nova_senha = request.form.get("nova_senha")
+        confirmar = request.form.get("confirmar")
+
+        user_id = session["user_id"]
+
+        usuario = supabase.table("usuarios")\
+            .select("senha_hash")\
+            .eq("id", user_id)\
+            .single()\
+            .execute()
+
+        hash_salvo = usuario.data["senha_hash"]
+
+        # valida senha atual
+        if not check_password_hash(hash_salvo, senha_atual):
+            flash("Senha atual incorreta.")
+            return redirect(url_for("trocar_senha"))
+
+        # confirma nova senha
+        if nova_senha != confirmar:
+            flash("As novas senhas não conferem.")
+            return redirect(url_for("trocar_senha"))
+
+        # tamanho mínimo
+        if len(nova_senha) < 6:
+            flash("Nova senha muito curta.")
+            return redirect(url_for("trocar_senha"))
+
+        novo_hash = generate_password_hash(nova_senha)
+
+        supabase.table("usuarios").update({
+            "senha_hash": novo_hash
+        }).eq("id", user_id).execute()
+
+        flash("Senha alterada com sucesso.")
+        return redirect(url_for("home"))
+
+    return render_template("trocar_senha.html")
 
 # --- ROTAS PROTEGIDAS (Adicione @login_required em todas) ---
 @app.route("/")
