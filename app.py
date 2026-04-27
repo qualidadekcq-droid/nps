@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from supabase import create_client
 from werkzeug.security import generate_password_hash, check_password_hash
+import pandas as pd
 import time
 import os
 
@@ -157,6 +158,50 @@ def treinamentos():
 def participantes():
     return render_template('participantes.html', participantes_importados=[])
 
+@app.route('/importar-presenca', methods=['POST'])
+@login_required
+def importar_presenca():
+    try:
+        arquivo = request.files.get("file")
+
+        if not arquivo or arquivo.filename == "":
+            flash("Selecione um arquivo.")
+            return redirect(url_for("participantes"))
+
+        nome_arquivo = arquivo.filename.lower()
+
+        if nome_arquivo.endswith(".csv"):
+            df = pd.read_csv(arquivo)
+        elif nome_arquivo.endswith(".xlsx") or nome_arquivo.endswith(".xls"):
+            df = pd.read_excel(arquivo)
+        else:
+            flash("Formato inválido. Envie Excel ou CSV.")
+            return redirect(url_for("participantes"))
+
+        participantes = []
+
+        for _, row in df.iterrows():
+            nome = str(row.iloc[0]).strip() if len(row) > 0 else ""
+            tema = str(row.iloc[1]).strip() if len(row) > 1 else ""
+            whatsapp = str(row.iloc[2]).strip() if len(row) > 2 else ""
+
+            if nome and nome != "nan":
+                participantes.append({
+                    "nome": nome,
+                    "tema": "" if tema == "nan" else tema,
+                    "whatsapp": "" if whatsapp == "nan" else whatsapp
+                })
+
+        return render_template(
+            "participantes.html",
+            participantes_importados=participantes
+        )
+
+    except Exception as e:
+        return f"Erro ao importar planilha: {str(e)}"
+
+
+
 @app.route('/relatorios')
 @login_required
 def relatorios():
@@ -187,4 +232,4 @@ def salvar_pesquisa():
     return "<h1>Obrigado pelo seu feedback!</h1>"
 
 if __name__ == "__main__":
-    app.run()
+   app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
