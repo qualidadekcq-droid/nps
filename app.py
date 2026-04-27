@@ -168,14 +168,23 @@ def importar_presenca():
             flash("Selecione um arquivo.")
             return redirect(url_for("participantes"))
 
-        nome_arquivo = arquivo.filename.lower()
+        nome = arquivo.filename.lower()
 
-        if nome_arquivo.endswith(".csv"):
+        # Detecta tipo de arquivo
+        if nome.endswith(".csv"):
             df = pd.read_csv(arquivo)
-        elif nome_arquivo.endswith(".xlsx") or nome_arquivo.endswith(".xls"):
-            df = pd.read_excel(arquivo)
+
+        elif nome.endswith(".xlsx"):
+            df = pd.read_excel(arquivo, engine="openpyxl")
+
+        elif nome.endswith(".xls"):
+            df = pd.read_excel(arquivo, engine="xlrd")
+
+        elif nome.endswith(".ods"):
+            df = pd.read_excel(arquivo, engine="odf")
+
         else:
-            flash("Formato inválido. Envie Excel ou CSV.")
+            flash("Formato não suportado. Use XLSX, XLS, CSV ou ODS.")
             return redirect(url_for("participantes"))
 
         participantes = []
@@ -199,7 +208,6 @@ def importar_presenca():
 
     except Exception as e:
         return f"Erro ao importar planilha: {str(e)}"
-
 
 
 @app.route('/relatorios')
