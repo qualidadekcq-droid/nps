@@ -151,41 +151,59 @@
 </div> 
 
 <script> 
-    function adicionarParticipante() { 
-        const nome = document.getElementById('manualNome').value; 
-        const tema = document.getElementById('manualTema').value; 
-        const fone = document.getElementById('manualFone').value; 
+function adicionarParticipante() {
+    const nome = document.getElementById('manualNome').value;
+    const tema = document.getElementById('manualTema').value;
+    const fone = document.getElementById('manualFone').value;
 
-        if(!nome || !fone) { alert("Nome e Telefone são obrigatórios!"); return; } 
+    if (!nome || !fone) {
+        alert("Nome e Telefone são obrigatórios!");
+        return;
+    }
 
-        const tabela = document.getElementById('corpoTabela'); 
-        const novaLinha = ` 
-            <tr> 
-                <td>${nome}</td> 
-                <td>${tema}</td> 
-                <td>${fone}</td> 
-                <td class="text-end"> 
-                    <button onclick="enviarWA('${nome}', '${fone}', '${tema}')" class="btn-wa-mass">Enviar</button> 
-                </td> 
-            </tr> 
-        `; 
-        tabela.innerHTML += novaLinha; 
-        document.getElementById('manualNome').value = ""; 
-        document.getElementById('manualTema').value = ""; 
-        document.getElementById('manualFone').value = ""; 
-    } 
+    const tabela = document.getElementById('corpoTabela');
 
-    function enviarWA(nomeCompleto, fone, tema) { 
-        const primeiroNome = nomeCompleto.trim().split(' ')[0]; 
-        let msg = document.getElementById('msgTexto').value; 
-        
-        msg = msg.replace("{nome}", primeiroNome).replace("{tema}", tema || "Treinamento"); 
-        
-        const link = document.getElementById('msgLink').value; 
-        if(link) msg += "\n\nLink: " + link; 
+    const novaLinha = `
+        <tr>
+            <td>${nome}</td>
+            <td>${tema}</td>
+            <td>${fone}</td>
+            <td class="text-end">
+                <button onclick="enviarWA('${nome}', '${fone}', '${tema}')" class="btn-wa-mass">Enviar</button>
+            </td>
+        </tr>
+    `;
 
-        // Fix: adicionada a barra após wa.me
-        window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msg)}`, '_blank');
-    } 
-</script> 
+    tabela.innerHTML += novaLinha;
+
+    document.getElementById('manualNome').value = "";
+    document.getElementById('manualTema').value = "";
+    document.getElementById('manualFone').value = "";
+}
+
+function enviarWA(nomeCompleto, fone, tema) {
+    const primeiroNome = nomeCompleto.trim().split(' ')[0];
+
+    let msg = document.getElementById('msgTexto').value;
+
+    msg = msg.replace("{nome}", primeiroNome)
+             .replace("{tema}", tema || "Treinamento");
+
+    const link = document.getElementById('msgLink').value;
+
+    if (link) {
+        msg += "\n\nLink: " + link;
+    }
+
+    fone = fone.replace(/\D/g, '');
+
+    if (!fone.startsWith("55")) {
+        fone = "55" + fone;
+    }
+
+    const url = `https://wa.me/${fone}?text=${encodeURIComponent(msg)}`;
+
+    window.open(url, "_blank");
+}
+</script>
 {% endblock %}
