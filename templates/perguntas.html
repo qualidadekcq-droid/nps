@@ -1,32 +1,220 @@
-<h2>{{ formulario.titulo }}</h2>
+{% extends 'base.html' %}
 
-<form method="POST" action="/pergunta/nova/{{ formulario.id }}">
-    <input name="pergunta" placeholder="Nova pergunta">
-    
-    <select name="tipo">
-        <option value="texto">Texto</option>
-        <option value="nota_1_5">Nota 1 a 5</option>
-        <option value="nota_0_10">NPS 0 a 10</option>
-        <option value="sim_nao">Sim / Não</option>
-        <option value="textarea">Comentário</option>
-    </select>
+{% block content %}
 
-    <input name="ordem" value="1">
-    <button type="submit">Adicionar</button>
-</form>
+<style>
+    .watermark-bg{
+        position: fixed;
+        top: 50%;
+        left: calc(50% + 110px);
+        transform: translate(-50%, -50%);
+        width: 450px;
+        opacity: 0.07;
+        z-index: -1;
+        pointer-events: none;
+    }
 
-<hr>
+    .page-wrap{
+        width: 100%;
+        max-width: 1200px;
+        padding-right: 40px;
+    }
 
-{% for p in perguntas %}
-<form method="POST" action="/pergunta/editar/{{ p.id }}">
-    <input name="pergunta" value="{{ p.pergunta }}">
-    <input name="ordem" value="{{ p.ordem }}">
-    
-    <select name="tipo">
-        <option value="{{ p.tipo }}">{{ p.tipo }}</option>
-    </select>
+    h1{
+        color:#facc15;
+        font-weight:800;
+        letter-spacing:3px;
+        text-transform:uppercase;
+        font-size:2.2rem;
+        margin-bottom:6px;
+    }
 
-    <button>Salvar</button>
-    <a href="/pergunta/excluir/{{ p.id }}">Excluir</a>
-</form>
-{% endfor %}
+    .subtitle{
+        opacity:.75;
+        margin-bottom:28px;
+        font-size:.95rem;
+    }
+
+    .card-dark{
+        background:#0a0a0a;
+        border:1px solid rgba(250,204,21,.18);
+        border-radius:16px;
+        padding:24px;
+        margin-bottom:22px;
+    }
+
+    .grid-form{
+        display:grid;
+        grid-template-columns: 1.8fr 1fr .7fr auto;
+        gap:12px;
+        align-items:center;
+    }
+
+    .question-grid{
+        display:grid;
+        grid-template-columns: 2fr .8fr 1fr auto auto;
+        gap:10px;
+        align-items:center;
+    }
+
+    input, select{
+        width:100%;
+        background:#050505;
+        border:1px solid rgba(255,255,255,.08);
+        color:#fff;
+        padding:12px 14px;
+        border-radius:10px;
+        outline:none;
+        font-size:.95rem;
+        box-sizing:border-box;
+    }
+
+    input:focus, select:focus{
+        border-color:#facc15;
+    }
+
+    .btn-main{
+        background:#facc15;
+        color:#000;
+        border:none;
+        padding:12px 18px;
+        border-radius:10px;
+        font-weight:800;
+        cursor:pointer;
+        text-decoration:none;
+        display:inline-block;
+        transition:.2s;
+    }
+
+    .btn-main:hover{
+        transform:translateY(-2px);
+    }
+
+    .btn-outline{
+        background:transparent;
+        color:#fff;
+        border:1px solid rgba(255,255,255,.12);
+        padding:11px 16px;
+        border-radius:10px;
+        font-weight:700;
+        cursor:pointer;
+        text-decoration:none;
+        display:inline-block;
+    }
+
+    .btn-danger{
+        background:#c60000;
+        color:#fff;
+        border:none;
+        padding:11px 16px;
+        border-radius:10px;
+        font-weight:700;
+        text-decoration:none;
+        display:inline-block;
+    }
+
+    .section-title{
+        color:#facc15;
+        font-size:.95rem;
+        font-weight:800;
+        letter-spacing:1px;
+        margin-bottom:14px;
+        text-transform:uppercase;
+    }
+
+    .question-item{
+        background:rgba(255,255,255,.02);
+        border:1px solid rgba(255,255,255,.06);
+        border-radius:14px;
+        padding:14px;
+        margin-bottom:14px;
+    }
+
+    .empty{
+        opacity:.55;
+        text-align:center;
+        padding:25px;
+    }
+
+    @media (max-width: 980px){
+        .grid-form,
+        .question-grid{
+            grid-template-columns:1fr;
+        }
+
+        .page-wrap{
+            padding-right:0;
+        }
+    }
+</style>
+
+<img src="{{ url_for('static', filename='logo.png') }}" class="watermark-bg">
+
+<div class="page-wrap">
+
+```
+<h1>Perguntas</h1>
+<div class="subtitle">{{ formulario.titulo }}</div>
+
+<div class="card-dark">
+    <div class="section-title">+ Nova Pergunta</div>
+
+    <form method="POST" action="/pergunta/nova/{{ formulario.id }}">
+        <div class="grid-form">
+            <input name="pergunta" placeholder="Digite a pergunta..." required>
+
+            <select name="tipo">
+                <option value="texto">Texto</option>
+                <option value="nota_1_5">Nota 1 a 5</option>
+                <option value="nota_0_10">NPS 0 a 10</option>
+                <option value="sim_nao">Sim / Não</option>
+                <option value="textarea">Comentário</option>
+            </select>
+
+            <input name="ordem" value="1" placeholder="Ordem">
+
+            <button type="submit" class="btn-main">Adicionar</button>
+        </div>
+    </form>
+</div>
+
+<div class="card-dark">
+    <div class="section-title">Perguntas cadastradas</div>
+
+    {% if perguntas %}
+        {% for p in perguntas %}
+        <div class="question-item">
+            <form method="POST" action="/pergunta/editar/{{ p.id }}">
+                <div class="question-grid">
+
+                    <input name="pergunta" value="{{ p.pergunta }}" required>
+
+                    <input name="ordem" value="{{ p.ordem }}">
+
+                    <select name="tipo">
+                        <option value="texto" {% if p.tipo == 'texto' %}selected{% endif %}>Texto</option>
+                        <option value="nota_1_5" {% if p.tipo == 'nota_1_5' %}selected{% endif %}>Nota 1 a 5</option>
+                        <option value="nota_0_10" {% if p.tipo == 'nota_0_10' %}selected{% endif %}>NPS 0 a 10</option>
+                        <option value="sim_nao" {% if p.tipo == 'sim_nao' %}selected{% endif %}>Sim / Não</option>
+                        <option value="textarea" {% if p.tipo == 'textarea' %}selected{% endif %}>Comentário</option>
+                    </select>
+
+                    <button type="submit" class="btn-outline">Salvar</button>
+
+                    <a href="/pergunta/excluir/{{ p.id }}" class="btn-danger"
+                       onclick="return confirm('Deseja excluir esta pergunta?')">
+                       Excluir
+                    </a>
+
+                </div>
+            </form>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty">Nenhuma pergunta cadastrada ainda.</div>
+    {% endif %}
+</div>
+```
+
+</div>
+{% endblock %}

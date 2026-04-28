@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+.page-wrap{
+    max-width:850px;
+    margin:auto;
+    padding:40px 20px;
+}
+
+.header-box{
+    text-align:center;
+    margin-bottom:35px;
+}
+
+.title{
+    font-size:2.3rem;
+    font-weight:800;
+    color:#facc15;
+    margin-bottom:8px;
+}
+
+.subtitle{
+    opacity:.75;
+    font-size:1rem;
+}
+
+.form-card{
+    background:#111;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:20px;
+    padding:35px;
+    box-shadow:0 12px 30px rgba(0,0,0,.35);
+}
+
+.question{
+    margin-bottom:28px;
+}
+
+.label{
+    display:block;
+    font-weight:700;
+    margin-bottom:12px;
+    font-size:1rem;
+}
+
+.input,
+.textarea,
+.select{
+    width:100%;
+    padding:14px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.08);
+    background:#0a0a0a;
+    color:#fff;
+    font-size:1rem;
+    box-sizing:border-box;
+}
+
+.textarea{
+    resize:vertical;
+    min-height:120px;
+}
+
+.input::placeholder,
+.textarea::placeholder{
+    color:#777;
+}
+
+.nps-grid{
+    display:grid;
+    grid-template-columns:repeat(11,1fr);
+    gap:8px;
+}
+
+.note-btn{
+    padding:12px 0;
+    border:none;
+    border-radius:10px;
+    background:#1b1b1b;
+    color:#fff;
+    cursor:pointer;
+    font-weight:700;
+}
+
+.note-btn:hover{
+    background:#facc15;
+    color:#000;
+}
+
+.radio-group{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+}
+
+.radio-box{
+    flex:1;
+    min-width:120px;
+}
+
+.radio-box label{
+    display:block;
+    background:#0a0a0a;
+    border:1px solid rgba(255,255,255,.08);
+    padding:14px;
+    border-radius:12px;
+    text-align:center;
+    cursor:pointer;
+}
+
+.radio-box input{
+    display:none;
+}
+
+.radio-box input:checked + label{
+    background:#facc15;
+    color:#000;
+    font-weight:800;
+}
+
+.submit-btn{
+    width:100%;
+    padding:16px;
+    border:none;
+    border-radius:12px;
+    background:#facc15;
+    color:#000;
+    font-size:1rem;
+    font-weight:800;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.submit-btn:hover{
+    background:#ffe36b;
+}
+</style>
+
+<div class="page-wrap">
+
+    <div class="header-box">
+        <div class="title">{{ formulario.titulo }}</div>
+        <div class="subtitle">{{ formulario.descricao }}</div>
+    </div>
+
+    <div class="form-card">
+        <form method="POST" action="/responder-formulario">
+
+            <input type="hidden" name="formulario_id" value="{{ formulario.id }}">
+
+            {% for p in perguntas %}
+            <div class="question">
+
+                <label class="label">{{ p.pergunta }}</label>
+
+                {% if p.tipo == 'texto' %}
+                    <input type="text"
+                           name="pergunta_{{ p.id }}"
+                           class="input"
+                           placeholder="Digite sua resposta">
+
+                {% elif p.tipo == 'textarea' %}
+                    <textarea
+                        name="pergunta_{{ p.id }}"
+                        class="textarea"
+                        placeholder="Digite sua resposta"></textarea>
+
+                {% elif p.tipo == 'nota_1_5' %}
+                    <select name="pergunta_{{ p.id }}" class="select">
+                        <option value="">Selecione</option>
+                        {% for n in range(1,6) %}
+                        <option value="{{ n }}">{{ n }}</option>
+                        {% endfor %}
+                    </select>
+
+                {% elif p.tipo == 'nota_0_10' %}
+                    <div class="nps-grid">
+                        {% for n in range(0,11) %}
+                        <button type="button"
+                                class="note-btn"
+                                onclick="document.getElementById('nps{{ p.id }}').value='{{ n }}'; this.parentNode.querySelectorAll('button').forEach(x=>x.style.background='#1b1b1b'); this.style.background='#facc15'; this.style.color='#000';">
+                            {{ n }}
+                        </button>
+                        {% endfor %}
+                    </div>
+                    <input type="hidden" id="nps{{ p.id }}" name="pergunta_{{ p.id }}">
+
+                {% elif p.tipo == 'sim_nao' %}
+                    <div class="radio-group">
+
+                        <div class="radio-box">
+                            <input type="radio"
+                                   id="sim{{ p.id }}"
+                                   name="pergunta_{{ p.id }}"
+                                   value="Sim">
+                            <label for="sim{{ p.id }}">Sim</label>
+                        </div>
+
+                        <div class="radio-box">
+                            <input type="radio"
+                                   id="nao{{ p.id }}"
+                                   name="pergunta_{{ p.id }}"
+                                   value="Não">
+                            <label for="nao{{ p.id }}">Não</label>
+                        </div>
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+            {% endfor %}
+
+            <button type="submit" class="submit-btn">
+                Enviar Respostas
+            </button>
+
+        </form>
+    </div>
+
+</div>
+
+{% endblock %}

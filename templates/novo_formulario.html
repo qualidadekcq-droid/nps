@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+.page-wrap{
+    max-width:700px;
+    margin:auto;
+    padding:40px 20px;
+}
+
+.title{
+    font-size:2.2rem;
+    font-weight:800;
+    color:#facc15;
+    margin-bottom:5px;
+}
+
+.subtitle{
+    opacity:.7;
+    margin-bottom:30px;
+}
+
+.card{
+    background:#111;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:18px;
+    padding:30px;
+}
+
+.input{
+    width:100%;
+    padding:14px;
+    margin-bottom:18px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,.08);
+    background:#0a0a0a;
+    color:#fff;
+    font-size:1rem;
+}
+
+.btn{
+    width:100%;
+    padding:14px;
+    background:#facc15;
+    color:#000;
+    border:none;
+    border-radius:10px;
+    font-weight:800;
+    cursor:pointer;
+}
+
+.btn:hover{
+    background:#ffe36b;
+}
+</style>
+
+<div class="page-wrap">
+
+    <div class="title">Novo Formulário</div>
+    <div class="subtitle">Crie pesquisas públicas, clima organizacional ou avaliações</div>
+
+    <div class="card">
+        <form method="POST">
+
+            <select name="tipo" class="input" required>
+                <option value="">Selecione o tipo</option>
+                <option value="treinamento">Treinamento</option>
+                <option value="clima">Clima</option>
+                <option value="avaliacao">Avaliação</option>
+                <option value="outro">Outro</option>
+            </select>
+
+            <input type="text" name="titulo" class="input" placeholder="Título" required>
+
+            <textarea name="descricao" class="input" placeholder="Descrição" rows="4"></textarea>
+
+            <button type="submit" class="btn">
+                Criar Formulário
+            </button>
+
+        </form>
+    </div>
+
+</div>
+
+{% endblock %}
