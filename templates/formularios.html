@@ -1,19 +1,187 @@
-<h2>Formulários</h2>
+```html
+{% extends 'base.html' %}
+{% block content %}
 
-<a href="/novo-formulario">Novo</a>
+<style>
+.page-wrap{
+    max-width:1100px;
+    margin:auto;
+    padding:30px 20px;
+}
 
-<hr>
+.top-bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+    flex-wrap:wrap;
+    margin-bottom:25px;
+}
 
-{% for f in formularios %}
-<div>
-    <b>{{ f.titulo }}</b> ({{ f.tipo }})
-    <br>
-    Link:
-    {{ request.host_url }}formulario/{{ f.token }}
+.title{
+    font-size:2rem;
+    font-weight:800;
+    letter-spacing:1px;
+    margin:0;
+}
 
-    <br><br>
+.subtitle{
+    opacity:.65;
+    margin-top:4px;
+    font-size:.95rem;
+}
 
-    <a href="/formulario/{{ f.id }}/perguntas">Editar Perguntas</a>
+.btn-main{
+    background:#facc15;
+    color:#000;
+    padding:12px 18px;
+    border-radius:10px;
+    text-decoration:none;
+    font-weight:700;
+    transition:.2s;
+}
+
+.btn-main:hover{
+    background:#ffe36b;
+    color:#000;
+}
+
+.grid-cards{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+    gap:20px;
+}
+
+.card-form{
+    background:#111;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:18px;
+    padding:22px;
+    box-shadow:0 10px 25px rgba(0,0,0,.25);
+}
+
+.badge{
+    display:inline-block;
+    padding:4px 10px;
+    border-radius:999px;
+    font-size:.75rem;
+    font-weight:700;
+    margin-bottom:12px;
+    background:#222;
+    color:#facc15;
+}
+
+.form-title{
+    font-size:1.2rem;
+    font-weight:800;
+    margin-bottom:8px;
+}
+
+.link-box{
+    background:#0b0b0b;
+    border:1px solid rgba(255,255,255,.06);
+    padding:10px;
+    border-radius:10px;
+    font-size:.88rem;
+    word-break:break-all;
+    margin:15px 0;
+}
+
+.actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+}
+
+.btn-sec{
+    padding:10px 14px;
+    border-radius:10px;
+    text-decoration:none;
+    font-weight:700;
+    font-size:.9rem;
+    border:1px solid rgba(255,255,255,.08);
+    color:#fff;
+}
+
+.btn-sec:hover{
+    background:#1b1b1b;
+}
+
+.btn-danger{
+    background:#8b0000;
+    color:#fff;
+    border:none;
+}
+
+.btn-danger:hover{
+    background:#b30000;
+}
+
+.empty{
+    text-align:center;
+    padding:50px 20px;
+    opacity:.6;
+    border:1px dashed rgba(255,255,255,.15);
+    border-radius:18px;
+}
+</style>
+
+<div class="page-wrap">
+
+    <div class="top-bar">
+        <div>
+            <h1 class="title">Formulários</h1>
+            <div class="subtitle">Gerencie pesquisas, clima, avaliação e links públicos</div>
+        </div>
+
+        <a href="/novo-formulario" class="btn-main">+ Novo Formulário</a>
+    </div>
+
+    {% if formularios %}
+
+    <div class="grid-cards">
+
+        {% for f in formularios %}
+        <div class="card-form">
+
+            <span class="badge">{{ f.tipo }}</span>
+
+            <div class="form-title">{{ f.titulo }}</div>
+
+            <div class="link-box">
+                {{ request.host_url }}formulario/{{ f.token }}
+            </div>
+
+            <div class="actions">
+                <a href="/formulario/{{ f.id }}/perguntas" class="btn-sec">
+                    Editar Perguntas
+                </a>
+
+                <a href="/formulario/{{ f.id }}/perguntas" class="btn-sec">
+                    Administrar
+                </a>
+
+                <a href="/formulario/excluir/{{ f.id }}"
+                   class="btn-sec btn-danger"
+                   onclick="return confirm('Deseja excluir este formulário?')">
+                    Excluir
+                </a>
+            </div>
+
+        </div>
+        {% endfor %}
+
+    </div>
+
+    {% else %}
+
+    <div class="empty">
+        Nenhum formulário cadastrado ainda.
+    </div>
+
+    {% endif %}
+
 </div>
-<hr>
-{% endfor %}
+
+{% endblock %}
+```

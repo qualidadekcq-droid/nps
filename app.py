@@ -444,10 +444,30 @@ def salvar_formulario():
 @app.route("/relatorios")
 @login_required
 def relatorios():
-    return render_template(
-        "relatorios.html",
-        feedbacks=[]
-    )
+
+    try:
+        feedbacks = supabase.table("respostas")\
+            .select("nota,comentario,created_at,treinamentos(titulo)")\
+            .order("created_at", desc=True)\
+            .limit(20)\
+            .execute()
+
+        lista = []
+
+        for item in feedbacks.data:
+            lista.append({
+                "nota": item["nota"],
+                "comentario": item["comentario"],
+                "titulo": item["treinamentos"]["titulo"] if item["treinamentos"] else "Treinamento",
+            })
+
+        return render_template(
+            "relatorios.html",
+            feedbacks=lista
+        )
+
+    except Exception as e:
+        return str(e)
 
 
 # ==========================================================
@@ -470,20 +490,14 @@ def exportar_pdf():
         width, height = A4
 
         p.setFont("Helvetica-Bold", 16)
-        p.drawString(
-            100,
-            height - 50,
-            "Relatório de Treinamentos - NPS"
-        )
+        p.drawString(100, height - 50, "Relatório de Treinamentos - NPS")
 
         y = height - 100
-
         p.setFont("Helvetica", 12)
 
         for t in treinamentos:
 
             texto = f"Curso: {t['titulo']} | Instrutor: {t['instrutor']} ({t['setor']})"
-
             p.drawString(100, y, texto)
 
             y -= 20
@@ -504,7 +518,33 @@ def exportar_pdf():
 
     except Exception as e:
         return f"Erro ao gerar PDF: {str(e)}"
+@app.route("/exportar-excel")
+@login_required
+def exportar_excel():
+    try:
+        res = supabase.table("respostas")\
+            .select("nota,comentario,clareza,aplicabilidade,instrutor,created_at")\
+            .order("created_at", desc=True)\
+            .execute()
 
+        df = pd.DataFrame(res.data)
+
+        output = io.BytesIO()
+
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Feedbacks")
+
+        output.seek(0)
+
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name="feedbacks.xlsx",
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+    except Exception as e:
+    return f"Erro ao gerar Excel: {str(e)}"
 
 # ==========================================================
 # PESQUISA ANTIGA (TREINAMENTO)
