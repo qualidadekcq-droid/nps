@@ -11,76 +11,95 @@ import io
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
+
 app.config["SESSION_COOKIE_HTTPONLY"] = True
-app.config["SESSION_COOKIE_SECURE"] = True   # se usa HTTPS
+app.config["SESSION_COOKIE_SECURE"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
+# =========================
+# SUPABASE
+# =========================
 supabase = create_client(
     os.getenv("SUPABASE_URL"),
     os.getenv("SUPABASE_KEY")
 )
-# --- FILTRO DE SEGURANÇA ---
-from functools import wraps
 
+# =========================
+# LOGIN REQUIRED
+# =========================
 def login_required(f):
     @wraps(f)
     def wrap(*args, **kwargs):
-        if 'user_id' not in session:
-            return redirect(url_for('login'))
+        if "user_id" not in session:
+            return redirect(url_for("login"))
         return f(*args, **kwargs)
     return wrap
 
-# --- ROTAS DE ACESSO ---
 
-@app.route("/login", methods=['GET', 'POST'])
+# ==========================================================
+# LOGIN / LOGOUT
+# ==========================================================
+@app.route("/login", methods=["GET", "POST"])
 def login():
-    if request.method == 'POST':
-        email = request.form.get('email')
-        senha = request.form.get('password')
-        
-        user = supabase.table("usuarios").select("id,nome,senha_hash").eq("email", email).execute()
-        
-        if user.data and check_password_hash(user.data[0]['senha_hash'], senha):
-            session['user_id'] = user.data[0]['id']
-            session['user_nome'] = user.data[0]['nome']
-            return redirect(url_for('home'))
-        
+
+    if request.method == "POST":
+
+        email = request.form.get("email")
+        senha = request.form.get("password")
+
+        user = supabase.table("usuarios") \
+            .select("id,nome,senha_hash") \
+            .eq("email", email) \
+            .execute()
+
+        if user.data:
+            if check_password_hash(user.data[0]["senha_hash"], senha):
+                session["user_id"] = user.data[0]["id"]
+                session["user_nome"] = user.data[0]["nome"]
+                return redirect(url_for("home"))
+
         flash("E-mail ou senha incorretos.")
+
     return render_template("login.html")
+
 
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for('login'))
+    return redirect(url_for("login"))
+
+
+# ==========================================================
+# TROCAR SENHA
+# ==========================================================
 @app.route("/trocar-senha", methods=["GET", "POST"])
 @login_required
 def trocar_senha():
+
     if request.method == "POST":
+
         senha_atual = request.form.get("senha_atual")
         nova_senha = request.form.get("nova_senha")
         confirmar = request.form.get("confirmar")
 
         user_id = session["user_id"]
 
-        usuario = supabase.table("usuarios")\
-            .select("senha_hash")\
-            .eq("id", user_id)\
-            .single()\
+        usuario = supabase.table("usuarios") \
+            .select("senha_hash") \
+            .eq("id", user_id) \
+            .single() \
             .execute()
 
         hash_salvo = usuario.data["senha_hash"]
 
-        # valida senha atual
         if not check_password_hash(hash_salvo, senha_atual):
             flash("Senha atual incorreta.")
             return redirect(url_for("trocar_senha"))
 
-        # confirma nova senha
         if nova_senha != confirmar:
             flash("As novas senhas não conferem.")
             return redirect(url_for("trocar_senha"))
 
-        # tamanho mínimo
         if len(nova_senha) < 6:
             flash("Nova senha muito curta.")
             return redirect(url_for("trocar_senha"))
@@ -96,13 +115,24 @@ def trocar_senha():
 
     return render_template("trocar_senha.html")
 
-# --- ROTAS PROTEGIDAS (Adicione @login_required em todas) ---
+
+# ==========================================================
+# DASHBOARD
+# ==========================================================
 @app.route("/")
 @login_required
 def home():
+
     try:
-        resumo = supabase.table("dashboard_resumo").select("*").single().execute()
-        ranking = supabase.table("dashboard_ranking").select("*").single().execute()
+        resumo = supabase.table("dashboard_resumo") \
+            .select("*") \
+            .single() \
+            .execute()
+
+        ranking = supabase.table("dashboard_ranking") \
+            .select("*") \
+            .single() \
+            .execute()
 
         r = resumo.data
         k = ranking.data
@@ -112,10 +142,8 @@ def home():
             "nps_geral": r["nps_geral"],
             "media_instrutores": f'{r["media_instrutores"]} / 5',
             "media_aplicabilidade": f'{r["media_aplicabilidade"]} / 5',
-
             "top_instrutor": k["top_instrutor"],
             "top_instrutor_nota": "---",
-
             "top_treinamento": k["top_treinamento"],
             "pior_treinamento": k["pior_treinamento"],
             "pior_nps": k["pior_nps"]
@@ -126,11 +154,15 @@ def home():
     except Exception as e:
         return str(e)
 
-@app.route('/cadastrar-treinamento', methods=['POST'])
-@login_required # Adicione isso se você quiser que só quem logou possa cadastrar
+
+# ==========================================================
+# TREINAMENTOS
+# ==========================================================
+@app.route("/cadastrar-treinamento", methods=["POST"])
+@login_required
 def cadastrar_treinamento():
+
     try:
-        # Coleta os dados do formulário
         dados = {
             "titulo": request.form.get("titulo"),
             "instrutor": request.form.get("instrutor"),
@@ -139,32 +171,46 @@ def cadastrar_treinamento():
             "descricao": request.form.get("descricao"),
             "status": "ativo"
         }
-        
-        # Insere no Supabase
+
         supabase.table("treinamentos").insert(dados).execute()
-        
-        # Após salvar, volta para a lista de treinamentos
-        return redirect(url_for('treinamentos'))
-        
+
+        return redirect(url_for("treinamentos"))
+
     except Exception as e:
-        print(f"Erro ao cadastrar: {e}")
         return f"Erro interno ao salvar treinamento: {str(e)}", 500
 
 
-@app.route('/treinamentos')
+@app.route("/treinamentos")
 @login_required
 def treinamentos():
-    resposta = supabase.table("treinamentos").select("id,titulo,instrutor,setor,data_treinamento,status").order("created_at", desc=True).execute()
-    return render_template('treinamentos.html', treinamentos=resposta.data)
 
-@app.route('/participantes')
+    resposta = supabase.table("treinamentos") \
+        .select("id,titulo,instrutor,setor,data_treinamento,status") \
+        .order("created_at", desc=True) \
+        .execute()
+
+    return render_template(
+        "treinamentos.html",
+        treinamentos=resposta.data
+    )
+
+
+# ==========================================================
+# PARTICIPANTES
+# ==========================================================
+@app.route("/participantes")
 @login_required
 def participantes():
-    return render_template('participantes.html', participantes_importados=[])
+    return render_template(
+        "participantes.html",
+        participantes_importados=[]
+    )
 
-@app.route('/importar-presenca', methods=['POST'])
+
+@app.route("/importar-presenca", methods=["POST"])
 @login_required
 def importar_presenca():
+
     try:
         arquivo = request.files.get("file")
 
@@ -174,7 +220,6 @@ def importar_presenca():
 
         nome = arquivo.filename.lower()
 
-        # Detecta tipo de arquivo
         if nome.endswith(".csv"):
             df = pd.read_csv(arquivo)
 
@@ -188,12 +233,13 @@ def importar_presenca():
             df = pd.read_excel(arquivo, engine="odf")
 
         else:
-            flash("Formato não suportado. Use XLSX, XLS, CSV ou ODS.")
+            flash("Formato não suportado.")
             return redirect(url_for("participantes"))
 
         participantes = []
 
         for _, row in df.iterrows():
+
             nome = str(row.iloc[0]).strip() if len(row) > 0 else ""
             tema = str(row.iloc[1]).strip() if len(row) > 1 else ""
             whatsapp = str(row.iloc[2]).strip() if len(row) > 2 else ""
@@ -213,15 +259,62 @@ def importar_presenca():
     except Exception as e:
         return f"Erro ao importar planilha: {str(e)}"
 
+
+# ==========================================================
+# FORMULÁRIOS
+# ==========================================================
+@app.route("/formularios")
+@login_required
+def formularios():
+
+    lista = supabase.table("formularios") \
+        .select("*") \
+        .order("created_at", desc=True) \
+        .execute()
+
+    return render_template(
+        "formularios.html",
+        formularios=lista.data
+    )
+
+
+@app.route("/novo-formulario", methods=["GET", "POST"])
+@login_required
+def novo_formulario():
+
+    if request.method == "POST":
+
+        token = str(int(time.time()))
+
+        dados = {
+            "tipo": request.form.get("tipo"),
+            "titulo": request.form.get("titulo"),
+            "descricao": request.form.get("descricao"),
+            "token": token,
+            "status": "ativo"
+        }
+
+        supabase.table("formularios").insert(dados).execute()
+
+        return redirect(url_for("formularios"))
+
+    return render_template("novo_formulario.html")
+
+
 @app.route("/formulario/<id>/perguntas")
 @login_required
 def perguntas_formulario(id):
-    form = supabase.table("formularios").select("*").eq("id", id).single().execute()
 
-    perguntas = supabase.table("perguntas_formulario")\
-        .select("*")\
-        .eq("formulario_id", id)\
-        .order("ordem")\
+    form = supabase.table("formularios") \
+        .select("*") \
+        .eq("id", id) \
+        .single() \
+        .execute()
+
+    perguntas = supabase.table("perguntas_formulario") \
+        .select("*") \
+        .eq("formulario_id", id) \
+        .order("ordem") \
         .execute()
 
     return render_template(
@@ -229,6 +322,7 @@ def perguntas_formulario(id):
         formulario=form.data,
         perguntas=perguntas.data
     )
+
 
 @app.route("/pergunta/nova/<formulario_id>", methods=["POST"])
 @login_required
@@ -244,7 +338,11 @@ def nova_pergunta(formulario_id):
 
     supabase.table("perguntas_formulario").insert(dados).execute()
 
-    return redirect(url_for("perguntas_formulario", id=formulario_id))
+    return redirect(url_for(
+        "perguntas_formulario",
+        id=formulario_id
+    ))
+
 
 @app.route("/pergunta/editar/<id>", methods=["POST"])
 @login_required
@@ -256,107 +354,205 @@ def editar_pergunta(id):
         "ordem": request.form.get("ordem")
     }
 
-    supabase.table("perguntas_formulario")\
-        .update(dados)\
-        .eq("id", id)\
+    supabase.table("perguntas_formulario") \
+        .update(dados) \
+        .eq("id", id) \
         .execute()
 
     return redirect(request.referrer)
+
 
 @app.route("/pergunta/excluir/<id>")
 @login_required
 def excluir_pergunta(id):
 
-    pergunta = supabase.table("perguntas_formulario")\
-        .select("formulario_id")\
-        .eq("id", id)\
-        .single()\
+    pergunta = supabase.table("perguntas_formulario") \
+        .select("formulario_id") \
+        .eq("id", id) \
+        .single() \
         .execute()
 
     formulario_id = pergunta.data["formulario_id"]
 
-    supabase.table("perguntas_formulario")\
-        .delete()\
-        .eq("id", id)\
+    supabase.table("perguntas_formulario") \
+        .delete() \
+        .eq("id", id) \
         .execute()
 
-    return redirect(url_for("perguntas_formulario", id=formulario_id))
+    return redirect(url_for(
+        "perguntas_formulario",
+        id=formulario_id
+    ))
 
 
+# ==========================================================
+# FORMULÁRIO PÚBLICO DINÂMICO
+# ==========================================================
+@app.route("/formulario/<token>")
+def responder_formulario(token):
 
-@app.route('/exportar-pdf')
+    form = supabase.table("formularios") \
+        .select("*") \
+        .eq("token", token) \
+        .single() \
+        .execute()
+
+    perguntas = supabase.table("perguntas_formulario") \
+        .select("*") \
+        .eq("formulario_id", form.data["id"]) \
+        .order("ordem") \
+        .execute()
+
+    return render_template(
+        "responder_formulario.html",
+        formulario=form.data,
+        perguntas=perguntas.data
+    )
+
+
+@app.route("/responder-formulario", methods=["POST"])
+def salvar_formulario():
+
+    try:
+        formulario_id = request.form.get("formulario_id")
+
+        perguntas = supabase.table("perguntas_formulario") \
+            .select("*") \
+            .eq("formulario_id", formulario_id) \
+            .execute()
+
+        for p in perguntas.data:
+
+            campo = f"pergunta_{p['id']}"
+            resposta = request.form.get(campo)
+
+            supabase.table("respostas_formulario").insert({
+                "formulario_id": formulario_id,
+                "pergunta_id": p["id"],
+                "resposta": resposta
+            }).execute()
+
+        return render_template("obrigado.html")
+
+    except Exception as e:
+        return f"Erro ao salvar formulário: {str(e)}"
+
+
+# ==========================================================
+# RELATÓRIOS
+# ==========================================================
+@app.route("/relatorios")
+@login_required
+def relatorios():
+    return render_template(
+        "relatorios.html",
+        feedbacks=[]
+    )
+
+
+# ==========================================================
+# EXPORTAR PDF
+# ==========================================================
+@app.route("/exportar-pdf")
 @login_required
 def exportar_pdf():
+
     try:
-        # 1. Busca dados do Supabase
-        res = supabase.table("treinamentos").select("titulo, instrutor, setor").execute()
+        res = supabase.table("treinamentos") \
+            .select("titulo, instrutor, setor") \
+            .execute()
+
         treinamentos = res.data
 
-        # 2. Cria o PDF em memória
         output = io.BytesIO()
         p = canvas.Canvas(output, pagesize=A4)
+
         width, height = A4
 
-        # Cabeçalho
         p.setFont("Helvetica-Bold", 16)
-        p.drawString(100, height - 50, "Relatório de Treinamentos - NPS")
-        
-        # Conteúdo
+        p.drawString(
+            100,
+            height - 50,
+            "Relatório de Treinamentos - NPS"
+        )
+
         y = height - 100
+
         p.setFont("Helvetica", 12)
+
         for t in treinamentos:
+
             texto = f"Curso: {t['titulo']} | Instrutor: {t['instrutor']} ({t['setor']})"
+
             p.drawString(100, y, texto)
-            y -= 20  # Pula linha
-            if y < 50:  # Cria nova página se acabar o espaço
+
+            y -= 20
+
+            if y < 50:
                 p.showPage()
                 y = height - 50
 
         p.save()
         output.seek(0)
 
-        return send_file(output, 
-                         as_attachment=True, 
-                         download_name="relatorio_nps.pdf", 
-                         mimetype='application/pdf')
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name="relatorio_nps.pdf",
+            mimetype="application/pdf"
+        )
+
     except Exception as e:
         return f"Erro ao gerar PDF: {str(e)}"
 
 
-@app.route('/relatorios')
-@login_required
-def relatorios():
-    # Lógica de feedbacks reais que passamos antes
-    return render_template('relatorios.html', feedbacks=[])
-
-# --- ROTAS PÚBLICAS (Alunos não precisam de login) ---
-
-@app.route('/pesquisa')
+# ==========================================================
+# PESQUISA ANTIGA (TREINAMENTO)
+# ==========================================================
+@app.route("/pesquisa")
 def pesquisa():
-    id_treino = request.args.get('id_treino')
-    treino = supabase.table("treinamentos").select("titulo").eq("id", id_treino).single().execute()
-    return render_template('feedback_form.html', treinamento_id=id_treino, treinamento_nome=treino.data['titulo'])
 
-@app.route('/salvar-pesquisa', methods=['POST'])
+    id_treino = request.args.get("id_treino")
+
+    treino = supabase.table("treinamentos") \
+        .select("titulo") \
+        .eq("id", id_treino) \
+        .single() \
+        .execute()
+
+    return render_template(
+        "feedback_form.html",
+        treinamento_id=id_treino,
+        treinamento_nome=treino.data["titulo"]
+    )
+
+
+@app.route("/salvar-pesquisa", methods=["POST"])
 def salvar_pesquisa():
+
     try:
         dados = {
-            "treinamento_id": request.form.get('treinamento_id'),
-            "nota": int(request.form.get('nota')),
-            "comentario": request.form.get('comentario'),
-            "clareza": int(request.form.get('clareza', 0)),
-            "aplicabilidade": int(request.form.get('aplicabilidade', 0)),
-            "instrutor": int(request.form.get('instrutor', 0))
+            "treinamento_id": request.form.get("treinamento_id"),
+            "nota": int(request.form.get("nota")),
+            "comentario": request.form.get("comentario"),
+            "clareza": int(request.form.get("clareza", 0)),
+            "aplicabilidade": int(request.form.get("aplicabilidade", 0)),
+            "instrutor": int(request.form.get("instrutor", 0))
         }
+
         supabase.table("respostas").insert(dados).execute()
-        
-        # Em vez de retornar o <h1> fixo, renderizamos o novo template
-        return render_template('obrigado.html')
-        
+
+        return render_template("obrigado.html")
+
     except Exception as e:
-        print(f"Erro ao salvar pesquisa: {e}")
-        return "Ocorreu um erro ao enviar sua resposta. Por favor, tente novamente.", 500
+        return f"Erro ao salvar pesquisa: {str(e)}"
 
 
+# ==========================================================
+# START
+# ==========================================================
 if __name__ == "__main__":
-   app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
+    app.run(
+        host="0.0.0.0",
+        port=int(os.getenv("PORT", 5000))
+    )
