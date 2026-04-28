@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from supabase import create_client
 from werkzeug.security import generate_password_hash, check_password_hash
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
 import pandas as pd
 import time
 import os
@@ -208,6 +210,43 @@ def importar_presenca():
 
     except Exception as e:
         return f"Erro ao importar planilha: {str(e)}"
+@app.route('/exportar-pdf')
+@login_required
+def exportar_pdf():
+    try:
+        # 1. Busca dados do Supabase
+        res = supabase.table("treinamentos").select("titulo, instrutor, setor").execute()
+        treinamentos = res.data
+
+        # 2. Cria o PDF em memória
+        output = io.BytesIO()
+        p = canvas.Canvas(output, pagesize=A4)
+        width, height = A4
+
+        # Cabeçalho
+        p.setFont("Helvetica-Bold", 16)
+        p.drawString(100, height - 50, "Relatório de Treinamentos - NPS")
+        
+        # Conteúdo
+        y = height - 100
+        p.setFont("Helvetica", 12)
+        for t in treinamentos:
+            texto = f"Curso: {t['titulo']} | Instrutor: {t['instrutor']} ({t['setor']})"
+            p.drawString(100, y, texto)
+            y -= 20  # Pula linha
+            if y < 50:  # Cria nova página se acabar o espaço
+                p.showPage()
+                y = height - 50
+
+        p.save()
+        output.seek(0)
+
+        return send_file(output, 
+                         as_attachment=True, 
+                         download_name="relatorio_nps.pdf", 
+                         mimetype='application/pdf')
+    except Exception as e:
+        return f"Erro ao gerar PDF: {str(e)}"
 
 
 @app.route('/relatorios')
@@ -226,18 +265,24 @@ def pesquisa():
 
 @app.route('/salvar-pesquisa', methods=['POST'])
 def salvar_pesquisa():
-    dados = {
-        "treinamento_id": request.form.get('treinamento_id'),
-        "nota": int(request.form.get('nota')),
-        "comentario": request.form.get('comentario'),
-        "clareza": int(request.form.get('clareza', 0)),
-        "aplicabilidade": int(request.form.get('aplicabilidade', 0)),
-        "instrutor": int(request.form.get('instrutor', 0))
-    }
+    try:
+        dados = {
+            "treinamento_id": request.form.get('treinamento_id'),
+            "nota": int(request.form.get('nota')),
+            "comentario": request.form.get('comentario'),
+            "clareza": int(request.form.get('clareza', 0)),
+            "aplicabilidade": int(request.form.get('aplicabilidade', 0)),
+            "instrutor": int(request.form.get('instrutor', 0))
+        }
+        supabase.table("respostas").insert(dados).execute()
+        
+        # Em vez de retornar o <h1> fixo, renderizamos o novo template
+        return render_template('obrigado.html')
+        
+    except Exception as e:
+        print(f"Erro ao salvar pesquisa: {e}")
+        return "Ocorreu um erro ao enviar sua resposta. Por favor, tente novamente.", 500
 
-    supabase.table("respostas").insert(dados).execute()
-
-    return "<h1>Obrigado pelo seu feedback!</h1>"
 
 if __name__ == "__main__":
    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))

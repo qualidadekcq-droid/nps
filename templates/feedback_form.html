@@ -4,198 +4,117 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pesquisa de Satisfação - NPS</title>
-    <!-- Link do Bootstrap Corrigido -->
-    <link href="https://jsdelivr.net" rel="stylesheet">
+    <!-- Font Awesome para Ícones Profissionais -->
+    <link rel="stylesheet" href="https://cloudflare.com">
     <style>
-        body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; margin: 0; }
+        body { background: #000; color: #fff; font-family: 'Segoe UI', Roboto, sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; margin: 0; }
+        .survey-card { background: #0a0a0a; border: 1px solid rgba(250, 204, 21, 0.2); border-radius: 28px; padding: 35px; max-width: 480px; width: 100%; box-shadow: 0 25px 50px rgba(0,0,0,0.8); text-align: center; }
         
-        .survey-card { 
-            background: #0a0a0a; 
-            border: 1px solid rgba(250, 204, 21, 0.3); 
-            border-radius: 24px; 
-            padding: 30px; 
-            max-width: 500px; 
-            width: 100%; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.7); 
-            text-align: center; 
-        }
+        h2 { color: #facc15; font-weight: 800; margin-bottom: 5px; font-size: 1.6rem; letter-spacing: -0.5px; }
+        .instruction { opacity: 0.6; font-size: 0.9rem; margin-bottom: 30px; line-height: 1.4; }
 
-        h2 { color: #facc15; font-weight: 800; margin-bottom: 10px; font-size: 1.6rem; }
-        .instruction { opacity: 0.7; font-size: 0.9rem; margin-bottom: 30px; }
+        /* Escala NPS 0 a 10 */
+        .nps-container { display: flex; justify-content: space-between; gap: 4px; margin-bottom: 35px; }
+        .nps-item { flex: 1; }
+        .nps-item input { display: none; }
+        .nps-item label { width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: #151515; border: 1px solid #222; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 0.85rem; color: #666; }
+        .nps-item input:checked + label { background: #facc15; color: #000; border-color: #facc15; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(250, 204, 21, 0.3); }
 
-        /* Escala NPS 0 a 10 - AJUSTADA PARA FICAR EM UMA LINHA */
-        .nps-container { 
-            display: flex; 
-            justify-content: center; 
-            flex-wrap: nowrap; /* Impede que o 10 pule para baixo */
-            gap: 4px; /* Espaço reduzido para caber tudo */
-            margin-bottom: 35px; 
-        }
-
-        .nps-item { position: relative; }
-        .nps-item input { position: absolute; opacity: 0; cursor: pointer; }
-
-        .nps-item label { 
-            width: 32px; /* Tamanho reduzido para alinhar todos */
-            height: 32px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            background: #111; 
-            border: 1px solid #333; 
-            border-radius: 50%; 
-            font-weight: bold; 
-            cursor: pointer; 
-            transition: 0.2s; 
-            font-size: 0.8rem; 
-        }
-
-        .nps-item input:checked + label { 
-            background: #facc15; 
-            color: #000; 
-            border-color: #facc15; 
-            transform: scale(1.15); 
-            box-shadow: 0 0 15px rgba(250, 204, 21, 0.4); 
-        }
-
-        /* Estrelas / Notas 1 a 5 */
-        .rating-group { text-align: left; margin-bottom: 25px; }
-        .rating-label { font-size: 0.85rem; font-weight: 700; color: #facc15; margin-bottom: 10px; display: block; text-transform: uppercase; letter-spacing: 1px; }
+        /* Grupos de Avaliação */
+        .rating-group { background: #111; padding: 18px; border-radius: 18px; border: 1px solid #1a1a1a; margin-bottom: 20px; text-align: left; }
+        .rating-label { font-size: 0.75rem; font-weight: 800; color: #facc15; margin-bottom: 12px; display: block; text-transform: uppercase; letter-spacing: 1.5px; }
         
-        .stars-row { 
-            display: flex; 
-            justify-content: space-around; 
-            background: #111; 
-            padding: 10px; 
-            border-radius: 12px; 
-            border: 1px solid #222; 
-        }
-
+        /* Estrelas Estilizadas */
+        .stars-row { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 15px; }
         .star-item input { display: none; }
-        .star-item label { cursor: pointer; opacity: 0.3; font-size: 1.3rem; transition: 0.2s; }
-        .star-item input:checked + label { opacity: 1; transform: scale(1.2); filter: drop-shadow(0 0 5px #facc15); }
-
-        textarea.form-control { 
-            background: #111; 
-            border: 1px solid #333; 
-            color: #fff; 
-            border-radius: 15px; 
-            padding: 15px; 
-            font-size: 0.9rem; 
-        }
+        .star-item label { cursor: pointer; color: #333; font-size: 1.5rem; transition: 0.2s; }
         
-        textarea:focus { 
-            background: #151515; 
-            border-color: #facc15; 
-            color: #fff; 
-            box-shadow: none; 
-            outline: none;
-        }
+        /* Efeito de preencher estrelas anteriores */
+        .star-item label:hover,
+        .star-item label:hover ~ label,
+        .star-item input:checked ~ label { color: #facc15; opacity: 1; }
 
-        .btn-submit { 
-            background: #facc15; 
-            color: #000; 
-            border: none; 
-            width: 100%; 
-            padding: 16px; 
-            border-radius: 15px; 
-            font-weight: 800; 
-            font-size: 1rem; 
-            margin-top: 20px; 
-            transition: 0.3s; 
-            text-transform: uppercase; 
-        }
-        
-        .btn-submit:hover { background: #fff; transform: translateY(-3px); }
+        textarea.form-control { background: #111; border: 1px solid #222; color: #fff; border-radius: 15px; padding: 15px; font-size: 0.9rem; width: 100%; box-sizing: border-box; resize: none; }
+        textarea:focus { border-color: #facc15; outline: none; background: #151515; }
 
-        .footer-anonimo { 
-            font-size: 0.7rem; 
-            opacity: 0.5; 
-            margin-top: 20px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            gap: 5px; 
-        }
+        .btn-submit { background: #facc15; color: #000; border: none; width: 100%; padding: 18px; border-radius: 16px; font-weight: 800; font-size: 1rem; margin-top: 15px; transition: 0.3s; text-transform: uppercase; cursor: pointer; letter-spacing: 1px; }
+        .btn-submit:hover { background: #fff; transform: translateY(-2px); }
 
-        /* Ajuste para telas muito pequenas (celulares antigos) */
-        @media (max-width: 380px) {
-            .nps-container { flex-wrap: wrap; gap: 8px; }
-            .nps-item label { width: 38px; height: 38px; }
+        .footer-anonimo { font-size: 0.7rem; opacity: 0.4; margin-top: 25px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+
+        @media (max-width: 400px) {
+            .nps-container { flex-wrap: wrap; justify-content: center; }
+            .nps-item { flex: unset; width: 35px; }
         }
     </style>
 </head>
 <body>
+    <div class="survey-card">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 50px; margin-bottom: 15px;">
+        <h2>Sua opinião vale muito!</h2>
+        <p class="instruction">O quanto você recomendaria o treinamento<br><strong>{{ treinamento_nome }}</strong> para um colega?</p>
+        
+        <form action="/salvar-pesquisa" method="POST">
+            <input type="hidden" name="treinamento_id" value="{{ treinamento_id }}">
 
-<div class="survey-card">
-    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 45px; margin-bottom: 20px;">
-    <h2>Sua opinião vale muito!</h2>
-    <p class="instruction">O quanto você recomendaria o treinamento<br><strong>{{ treinamento_nome }}</strong> para um colega?</p>
-
-    <form action="/salvar-pesquisa" method="POST">
-        <input type="hidden" name="treinamento_id" value="{{ treinamento_id }}">
-
-        <!-- Escala NPS 0 a 10 -->
-        <div class="nps-container">
-            {% for i in range(11) %}
-            <div class="nps-item">
-                <input type="radio" name="nota" value="{{ i }}" id="n{{ i }}" required>
-                <label for="n{{ i }}">{{ i }}</label>
-            </div>
-            {% endfor %}
-        </div>
-
-        <!-- Clareza -->
-        <div class="rating-group">
-            <span class="rating-label">O conteúdo foi claro?</span>
-            <div class="stars-row">
-                {% for i in range(1, 6) %}
-                <div class="star-item">
-                    <input type="radio" name="clareza" value="{{ i }}" id="c{{ i }}" required>
-                    <label for="c{{ i }}">⭐</label>
+            <!-- NPS 0 a 10 -->
+            <div class="nps-container">
+                {% for i in range(11) %}
+                <div class="nps-item">
+                    <input type="radio" name="nota" value="{{ i }}" id="n{{ i }}" required>
+                    <label for="n{{ i }}">{{ i }}</label>
                 </div>
                 {% endfor %}
             </div>
-        </div>
 
-        <!-- Aplicabilidade -->
-        <div class="rating-group">
-            <span class="rating-label">É aplicável no dia a dia?</span>
-            <div class="stars-row">
-                {% for i in range(1, 6) %}
-                <div class="star-item">
-                    <input type="radio" name="aplicabilidade" value="{{ i }}" id="a{{ i }}" required>
-                    <label for="a{{ i }}">🛠️</label>
+            <!-- Perguntas de Estrelas -->
+            <div class="rating-group">
+                <span class="rating-label">O conteúdo foi claro?</span>
+                <div class="stars-row">
+                    {% for i in range(5, 0, -1) %}
+                    <div class="star-item">
+                        <input type="radio" name="clareza" value="{{ i }}" id="c{{ i }}" required>
+                        <label for="c{{ i }}"><i class="fas fa-star"></i></label>
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
-        </div>
 
-        <!-- Instrutor -->
-        <div class="rating-group">
-            <span class="rating-label">Avaliação do Instrutor</span>
-            <div class="stars-row">
-                {% for i in range(1, 6) %}
-                <div class="star-item">
-                    <input type="radio" name="instrutor" value="{{ i }}" id="i{{ i }}" required>
-                    <label for="i{{ i }}">👨‍🏫</label>
+            <div class="rating-group">
+                <span class="rating-label">É aplicável no dia a dia?</span>
+                <div class="stars-row">
+                    {% for i in range(5, 0, -1) %}
+                    <div class="star-item">
+                        <input type="radio" name="aplicabilidade" value="{{ i }}" id="a{{ i }}" required>
+                        <label for="a{{ i }}"><i class="fas fa-tools"></i></label>
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
-        </div>
 
-        <div class="mb-3 text-start">
-            <label class="rating-label">Comentário Adicional (Opcional)</label>
-            <textarea name="comentario" class="form-control" rows="3" placeholder="Sua identidade será preservada..."></textarea>
-        </div>
+            <div class="rating-group">
+                <span class="rating-label">Avaliação do Instrutor</span>
+                <div class="stars-row">
+                    {% for i in range(5, 0, -1) %}
+                    <div class="star-item">
+                        <input type="radio" name="instrutor" value="{{ i }}" id="i{{ i }}" required>
+                        <label for="i{{ i }}"><i class="fas fa-chalkboard-teacher"></i></label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
 
-        <button type="submit" class="btn-submit">Enviar Feedback</button>
+            <div style="text-align: left; margin-bottom: 10px;">
+                <label class="rating-label" style="margin-left: 10px;">Comentário Adicional</label>
+                <textarea name="comentario" class="form-control" rows="3" placeholder="Opcional: Sua identidade será preservada..."></textarea>
+            </div>
 
-        <div class="footer-anonimo">
-            🔒 Pesquisa 100% Anônima • Recursos Humanos Cacique
-        </div>
-    </form>
-</div>
+            <button type="submit" class="btn-submit">Enviar Feedback</button>
 
+            <div class="footer-anonimo">
+                <i class="fas fa-user-secret"></i> Pesquisa 100% Anônima • Recursos Humanos Cacique
+            </div>
+        </form>
+    </div>
 </body>
 </html>
