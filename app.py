@@ -212,6 +212,78 @@ def importar_presenca():
 
     except Exception as e:
         return f"Erro ao importar planilha: {str(e)}"
+
+@app.route("/formulario/<id>/perguntas")
+@login_required
+def perguntas_formulario(id):
+    form = supabase.table("formularios").select("*").eq("id", id).single().execute()
+
+    perguntas = supabase.table("perguntas_formulario")\
+        .select("*")\
+        .eq("formulario_id", id)\
+        .order("ordem")\
+        .execute()
+
+    return render_template(
+        "perguntas.html",
+        formulario=form.data,
+        perguntas=perguntas.data
+    )
+
+@app.route("/pergunta/nova/<formulario_id>", methods=["POST"])
+@login_required
+def nova_pergunta(formulario_id):
+
+    dados = {
+        "formulario_id": formulario_id,
+        "pergunta": request.form.get("pergunta"),
+        "tipo": request.form.get("tipo"),
+        "ordem": request.form.get("ordem"),
+        "obrigatoria": True
+    }
+
+    supabase.table("perguntas_formulario").insert(dados).execute()
+
+    return redirect(url_for("perguntas_formulario", id=formulario_id))
+
+@app.route("/pergunta/editar/<id>", methods=["POST"])
+@login_required
+def editar_pergunta(id):
+
+    dados = {
+        "pergunta": request.form.get("pergunta"),
+        "tipo": request.form.get("tipo"),
+        "ordem": request.form.get("ordem")
+    }
+
+    supabase.table("perguntas_formulario")\
+        .update(dados)\
+        .eq("id", id)\
+        .execute()
+
+    return redirect(request.referrer)
+
+@app.route("/pergunta/excluir/<id>")
+@login_required
+def excluir_pergunta(id):
+
+    pergunta = supabase.table("perguntas_formulario")\
+        .select("formulario_id")\
+        .eq("id", id)\
+        .single()\
+        .execute()
+
+    formulario_id = pergunta.data["formulario_id"]
+
+    supabase.table("perguntas_formulario")\
+        .delete()\
+        .eq("id", id)\
+        .execute()
+
+    return redirect(url_for("perguntas_formulario", id=formulario_id))
+
+
+
 @app.route('/exportar-pdf')
 @login_required
 def exportar_pdf():

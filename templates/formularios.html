@@ -1,0 +1,19 @@
+<h2>Formulários</h2>
+
+<a href="/novo-formulario">Novo</a>
+
+<hr>
+
+{% for f in formularios %}
+<div>
+    <b>{{ f.titulo }}</b> ({{ f.tipo }})
+    <br>
+    Link:
+    {{ request.host_url }}formulario/{{ f.token }}
+
+    <br><br>
+
+    <a href="/formulario/{{ f.id }}/perguntas">Editar Perguntas</a>
+</div>
+<hr>
+{% endfor %}

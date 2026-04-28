@@ -1,0 +1,32 @@
+<h2>{{ formulario.titulo }}</h2>
+
+<form method="POST" action="/pergunta/nova/{{ formulario.id }}">
+    <input name="pergunta" placeholder="Nova pergunta">
+    
+    <select name="tipo">
+        <option value="texto">Texto</option>
+        <option value="nota_1_5">Nota 1 a 5</option>
+        <option value="nota_0_10">NPS 0 a 10</option>
+        <option value="sim_nao">Sim / Não</option>
+        <option value="textarea">Comentário</option>
+    </select>
+
+    <input name="ordem" value="1">
+    <button type="submit">Adicionar</button>
+</form>
+
+<hr>
+
+{% for p in perguntas %}
+<form method="POST" action="/pergunta/editar/{{ p.id }}">
+    <input name="pergunta" value="{{ p.pergunta }}">
+    <input name="ordem" value="{{ p.ordem }}">
+    
+    <select name="tipo">
+        <option value="{{ p.tipo }}">{{ p.tipo }}</option>
+    </select>
+
+    <button>Salvar</button>
+    <a href="/pergunta/excluir/{{ p.id }}">Excluir</a>
+</form>
+{% endfor %}
