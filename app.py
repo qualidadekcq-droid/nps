@@ -522,9 +522,9 @@ def exportar_pdf():
 @login_required
 def exportar_excel():
     try:
-        res = supabase.table("respostas")\
-            .select("nota,comentario,clareza,aplicabilidade,instrutor,created_at")\
-            .order("created_at", desc=True)\
+        res = supabase.table("respostas") \
+            .select("nota,comentario,clareza,aplicabilidade,instrutor,created_at") \
+            .order("created_at", desc=True) \
             .execute()
 
         df = pd.DataFrame(res.data)
@@ -544,7 +544,7 @@ def exportar_excel():
         )
 
     except Exception as e:
-    return f"Erro ao gerar Excel: {str(e)}"
+        return f"Erro ao gerar Excel: {str(e)}"
 
 # ==========================================================
 # PESQUISA ANTIGA (TREINAMENTO)
