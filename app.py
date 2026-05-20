@@ -13,7 +13,7 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
 
 app.config["SESSION_COOKIE_HTTPONLY"] = True
-app.config["SESSION_COOKIE_SECURE"] = False
+app.config["SESSION_COOKIE_SECURE"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 # =========================
@@ -223,7 +223,7 @@ def baixar_modelo():
         {
             "nome": "João Silva",
             "treinamento": "Integração",
-            "whatsapp": "41999999999"
+            "whatsapp": "33999999999"
         }
     ])
 
@@ -283,9 +283,15 @@ def importar_presenca():
                     "whatsapp": "" if whatsapp == "nan" else whatsapp
                 })
 
+        treinamentos = supabase.table("treinamentos") \
+            .select("id,titulo") \
+            .order("titulo") \
+            .execute()
+
         return render_template(
             "participantes.html",
-            participantes_importados=participantes
+            participantes_importados=participantes,
+            treinamentos=treinamentos.data
         )
 
     except Exception as e:
@@ -517,28 +523,75 @@ def exportar_pdf():
         treinamentos = res.data
 
         output = io.BytesIO()
+
         p = canvas.Canvas(output, pagesize=A4)
 
         width, height = A4
 
-        p.setFont("Helvetica-Bold", 16)
-        p.drawString(100, height - 50, "Relatório de Treinamentos - NPS")
+        margem_esquerda = 50
+        y = height - 60
 
-        y = height - 100
-        p.setFont("Helvetica", 12)
+        # Título
+        p.setFont("Helvetica-Bold", 18)
+        p.drawString(
+            margem_esquerda,
+            y,
+            "Relatório de Treinamentos - NPS"
+        )
+
+        y -= 40
+
+        p.setFont("Helvetica", 11)
 
         for t in treinamentos:
 
-            texto = f"Curso: {t['titulo']} | Instrutor: {t['instrutor']} ({t['setor']})"
-            p.drawString(100, y, texto)
+            texto = (
+                f"Curso: {t['titulo']} | "
+                f"Instrutor: {t['instrutor']} | "
+                f"Setor: {t['setor']}"
+            )
 
-            y -= 20
+            # QUEBRA DE LINHA MANUAL
+                # QUEBRA DE LINHA AUTOMÁTICA
+            linhas = []
 
-            if y < 50:
-                p.showPage()
-                y = height - 50
+            while p.stringWidth(texto, "Helvetica", 11) > 470:
+
+                corte = len(texto)
+
+                while p.stringWidth(texto[:corte], "Helvetica", 11) > 470:
+                    corte -= 1
+
+                corte = texto[:corte].rfind(" ")
+
+                if corte == -1:
+                    break
+
+                linhas.append(texto[:corte])
+                texto = texto[corte:].strip()
+
+            linhas.append(texto)
+
+            for linha in linhas:
+
+                p.drawString(
+                    margem_esquerda,
+                    y,
+                    linha
+                )
+
+                y -= 18
+
+                # Nova página
+                if y < 60:
+                    p.showPage()
+                    p.setFont("Helvetica", 11)
+                    y = height - 60
+
+            y -= 10
 
         p.save()
+
         output.seek(0)
 
         return send_file(
