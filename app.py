@@ -143,7 +143,7 @@ def home():
             "media_instrutores": f'{r["media_instrutores"]} / 5',
             "media_aplicabilidade": f'{r["media_aplicabilidade"]} / 5',
             "top_instrutor": k["top_instrutor"],
-            "top_instrutor_nota": "---",
+            "top_instrutor_nota": f'{k["top_instrutor_nota"]} / 5',
             "top_treinamento": k["top_treinamento"],
             "pior_treinamento": k["pior_treinamento"],
             "pior_nps": k["pior_nps"]
