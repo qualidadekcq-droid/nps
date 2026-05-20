@@ -511,13 +511,30 @@ def relatorios():
 # ==========================================================
 # EXPORTAR PDF
 # ==========================================================
+# ==========================================================
+# EXPORTAR PDF
+# ==========================================================
+# ==========================================================
+# EXPORTAR PDF
+# ==========================================================
 @app.route("/exportar-pdf")
 @login_required
 def exportar_pdf():
 
     try:
+
         res = supabase.table("treinamentos") \
-            .select("titulo, instrutor, setor") \
+            .select("""
+                id,
+                titulo,
+                instrutor,
+                setor,
+                data_treinamento,
+                respostas(
+                    nota,
+                    instrutor
+                )
+            """) \
             .execute()
 
         treinamentos = res.data
@@ -531,35 +548,101 @@ def exportar_pdf():
         margem_esquerda = 50
         y = height - 60
 
-        # Título
+        # TÍTULO
         p.setFont("Helvetica-Bold", 18)
         p.drawString(
             margem_esquerda,
             y,
-            "Relatório de Treinamentos - NPS"
+            "Relatório Mensal de NPS"
         )
 
         y -= 40
 
         p.setFont("Helvetica", 11)
 
+        from datetime import datetime
+
         for t in treinamentos:
 
+            respostas = t.get("respostas", [])
+
+            media_nota = 0
+            media_instrutor = 0
+
+            # =========================================
+            # CALCULAR MÉDIAS
+            # =========================================
+            if respostas:
+
+                notas = [
+                    r["nota"]
+                    for r in respostas
+                    if r.get("nota") is not None
+                ]
+
+                notas_instrutor = [
+                    r["instrutor"]
+                    for r in respostas
+                    if r.get("instrutor") is not None
+                ]
+
+                if notas:
+                    media_nota = round(
+                        sum(notas) / len(notas),
+                        1
+                    )
+
+                if notas_instrutor:
+                    media_instrutor = round(
+                        sum(notas_instrutor) / len(notas_instrutor),
+                        1
+                    )
+
+            # =========================================
+            # FORMATAR DATA
+            # =========================================
+            data_formatada = ""
+
+            data_original = t.get("data_treinamento")
+
+            if data_original:
+
+                try:
+                    data_formatada = datetime.strptime(
+                        data_original,
+                        "%Y-%m-%d"
+                    ).strftime("%d/%m/%Y")
+
+                except:
+                    data_formatada = str(data_original)
+
+            # =========================================
+            # TEXTO DO RELATÓRIO
+            # =========================================
             texto = (
                 f"Curso: {t['titulo']} | "
                 f"Instrutor: {t['instrutor']} | "
-                f"Setor: {t['setor']}"
+                f"Setor: {t['setor']} | "
+                f"Data: {data_formatada} | "
+                f"Média NPS: {media_nota} | "
+                f"Média Instrutor: {media_instrutor}/5"
             )
 
-            # QUEBRA DE LINHA MANUAL
-                # QUEBRA DE LINHA AUTOMÁTICA
+            # =========================================
+            # QUEBRA AUTOMÁTICA DE LINHA
+            # =========================================
             linhas = []
 
             while p.stringWidth(texto, "Helvetica", 11) > 470:
 
                 corte = len(texto)
 
-                while p.stringWidth(texto[:corte], "Helvetica", 11) > 470:
+                while p.stringWidth(
+                    texto[:corte],
+                    "Helvetica",
+                    11
+                ) > 470:
+
                     corte -= 1
 
                 corte = texto[:corte].rfind(" ")
@@ -568,10 +651,14 @@ def exportar_pdf():
                     break
 
                 linhas.append(texto[:corte])
+
                 texto = texto[corte:].strip()
 
             linhas.append(texto)
 
+            # =========================================
+            # ESCREVER NO PDF
+            # =========================================
             for linha in linhas:
 
                 p.drawString(
@@ -582,10 +669,13 @@ def exportar_pdf():
 
                 y -= 18
 
-                # Nova página
+                # NOVA PÁGINA
                 if y < 60:
+
                     p.showPage()
+
                     p.setFont("Helvetica", 11)
+
                     y = height - 60
 
             y -= 10
@@ -603,6 +693,7 @@ def exportar_pdf():
 
     except Exception as e:
         return f"Erro ao gerar PDF: {str(e)}"
+
 @app.route("/exportar-excel")
 @login_required
 def exportar_excel():
