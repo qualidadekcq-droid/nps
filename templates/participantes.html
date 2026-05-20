@@ -52,7 +52,13 @@
     } 
 
     .form-control-dark:focus { border-color: #facc15; outline: none; background: #151515; } 
-
+select.form-control-dark {
+    appearance: none;
+    cursor: pointer;
+    background-color: #111;
+    color: #fff;
+}
+}
     .btn-wa-mass { 
         background: #25d366; 
         color: white; 
@@ -86,8 +92,15 @@
                 <form action="{{ url_for('importar_presenca') }}" method="POST" enctype="multipart/form-data">
                     <input type="file" name="file" id="fileInput" hidden accept=".xlsx,.xls,.csv,.ods">
                     <button type="button" class="btn btn-outline-warning w-100 mb-3" onclick="document.getElementById('fileInput').click()">📁 Selecionar Arquivo</button> 
-                    <button type="submit" class="btn btn-warning w-100 font-weight-bold">Subir Planilha</button> 
-                </form> 
+  <button type="submit" class="btn btn-warning w-100 font-weight-bold">
+    Subir Planilha
+</button>
+
+<a href="{{ url_for('baixar_modelo') }}"
+   class="btn btn-outline-light w-100 mt-2">
+    📥 Baixar Modelo Excel
+</a>
+                 </form> 
             </div> 
         </div> 
 
@@ -99,9 +112,17 @@
                     <div class="col-md-4"> 
                         <input type="text" id="manualNome" class="form-control-dark" placeholder="Nome Completo"> 
                     </div> 
-                    <div class="col-md-4"> 
-                        <input type="text" id="manualTema" class="form-control-dark" placeholder="Tema Treinamento"> 
-                    </div> 
+                    <div class="col-md-4">
+    <select id="manualTema" class="form-control-dark">
+        <option value="">Selecionar Treinamento</option>
+
+        {% for t in treinamentos %}
+            <option value="{{ t.titulo }}">
+                {{ t.titulo }}
+            </option>
+        {% endfor %}
+    </select>
+</div>
                     <div class="col-md-4"> 
                         <input type="text" id="manualFone" class="form-control-dark" placeholder="WhatsApp (DDD+Número)"> 
                     </div> 
@@ -177,7 +198,7 @@ function adicionarParticipante() {
     tabela.innerHTML += novaLinha;
 
     document.getElementById('manualNome').value = "";
-    document.getElementById('manualTema').value = "";
+    document.getElementById('manualTema').selectedIndex = 0;
     document.getElementById('manualFone').value = "";
 }
 

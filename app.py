@@ -13,7 +13,7 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
 
 app.config["SESSION_COOKIE_HTTPONLY"] = True
-app.config["SESSION_COOKIE_SECURE"] = True
+app.config["SESSION_COOKIE_SECURE"] = False
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 # =========================
@@ -201,11 +201,43 @@ def treinamentos():
 @app.route("/participantes")
 @login_required
 def participantes():
+
+    treinamentos = supabase.table("treinamentos") \
+        .select("id,titulo") \
+        .order("titulo") \
+        .execute()
+
     return render_template(
         "participantes.html",
-        participantes_importados=[]
+        participantes_importados=[],
+        treinamentos=treinamentos.data
     )
 
+@app.route("/baixar-modelo")
+@login_required
+def baixar_modelo():
+
+    output = io.BytesIO()
+
+    modelo = pd.DataFrame([
+        {
+            "nome": "João Silva",
+            "treinamento": "Integração",
+            "whatsapp": "41999999999"
+        }
+    ])
+
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        modelo.to_excel(writer, index=False)
+
+    output.seek(0)
+
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name="modelo_participantes.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
 @app.route("/importar-presenca", methods=["POST"])
 @login_required
@@ -552,32 +584,52 @@ def exportar_excel():
 @app.route("/pesquisa")
 def pesquisa():
 
-    id_treino = request.args.get("id_treino")
+    try:
 
-    treino = supabase.table("treinamentos") \
-        .select("titulo") \
-        .eq("id", id_treino) \
-        .single() \
-        .execute()
+        id_treino = request.args.get("id_treino")
 
-    return render_template(
-        "feedback_form.html",
-        treinamento_id=id_treino,
-        treinamento_nome=treino.data["titulo"]
-    )
+        if not id_treino:
+            return "Treinamento não informado.", 400
+
+        treino = supabase.table("treinamentos") \
+            .select("titulo") \
+            .eq("id", id_treino) \
+            .single() \
+            .execute()
+
+        if not treino.data:
+            return "Treinamento não encontrado.", 404
+
+        return render_template(
+            "feedback_form.html",
+            treinamento_id=id_treino,
+            treinamento_nome=treino.data["titulo"]
+        )
+
+    except Exception as e:
+        return f"Erro ao carregar pesquisa: {str(e)}", 500
 
 
 @app.route("/salvar-pesquisa", methods=["POST"])
 def salvar_pesquisa():
 
     try:
+
+        nota = request.form.get("nota")
+        clareza = request.form.get("clareza")
+        aplicabilidade = request.form.get("aplicabilidade")
+        instrutor = request.form.get("instrutor")
+
+        if not nota:
+            return "Nota obrigatória.", 400
+
         dados = {
             "treinamento_id": request.form.get("treinamento_id"),
-            "nota": int(request.form.get("nota")),
-            "comentario": request.form.get("comentario"),
-            "clareza": int(request.form.get("clareza", 0)),
-            "aplicabilidade": int(request.form.get("aplicabilidade", 0)),
-            "instrutor": int(request.form.get("instrutor", 0))
+            "nota": int(nota),
+            "comentario": request.form.get("comentario", ""),
+            "clareza": int(clareza) if clareza else 0,
+            "aplicabilidade": int(aplicabilidade) if aplicabilidade else 0,
+            "instrutor": int(instrutor) if instrutor else 0
         }
 
         supabase.table("respostas").insert(dados).execute()
@@ -585,8 +637,9 @@ def salvar_pesquisa():
         return render_template("obrigado.html")
 
     except Exception as e:
-        return f"Erro ao salvar pesquisa: {str(e)}"
-
+        print(e)
+        return f"Erro ao salvar pesquisa: {str(e)}", 500
+   
 
 # ==========================================================
 # START
