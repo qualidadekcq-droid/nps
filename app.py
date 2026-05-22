@@ -221,9 +221,9 @@ def baixar_modelo():
 
     modelo = pd.DataFrame([
         {
-            "nome": "João Silva",
-            "treinamento": "Integração",
-            "whatsapp": "33999999999"
+            "Nome": "João Silva",
+            "Treinamento": "Integração",
+            "Whatsapp": "33999999999"
         }
     ])
 
