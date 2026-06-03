@@ -340,7 +340,8 @@ def nova_pergunta(formulario_id):
         "pergunta": request.form.get("pergunta"),
         "tipo": request.form.get("tipo"),
         "ordem": request.form.get("ordem"),
-        "obrigatoria": True
+        "obrigatoria": True,
+        "ativa": True   # 👈 IMPORTANTE (default ativo)
     }
 
     supabase.table("perguntas_formulario").insert(dados).execute()
@@ -354,7 +355,8 @@ def editar_pergunta(id):
     dados = {
         "pergunta": request.form.get("pergunta"),
         "tipo": request.form.get("tipo"),
-        "ordem": request.form.get("ordem")
+        "ordem": request.form.get("ordem"),
+        "ativa": True if request.form.get("ativa") == "1" else False
     }
 
     supabase.table("perguntas_formulario") \
@@ -363,7 +365,6 @@ def editar_pergunta(id):
         .execute()
 
     return redirect(request.referrer)
-
 
 @app.route("/pergunta/excluir/<id>")
 @login_required
