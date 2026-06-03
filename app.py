@@ -324,10 +324,11 @@ def perguntas_formulario(id):
         return "Formulário não encontrado", 404
 
     perguntas = supabase.table("perguntas_formulario") \
-        .select("*") \
-        .eq("formulario_id", id) \
-        .order("ordem") \
-        .execute()
+    .select("*") \
+    .eq("formulario_id", form.data["id"]) \
+    .eq("ativa", True) \
+    .order("ordem") \
+    .execute()
 
     return render_template("perguntas.html", formulario=form.data, perguntas=perguntas.data)
 
