@@ -418,13 +418,17 @@ def salvar_formulario():
         formulario_id = request.form.get("formulario_id")
 
         perguntas = supabase.table("perguntas_formulario") \
-            .select("*") \
+            .select("id") \
             .eq("formulario_id", formulario_id) \
             .execute()
 
         for p in perguntas.data:
             campo = f"pergunta_{p['id']}"
             resposta = request.form.get(campo)
+
+            # 🔥 CORREÇÃO REAL AQUI
+            if resposta is None or resposta == "":
+                continue
 
             supabase.table("respostas_formulario").insert({
                 "formulario_id": formulario_id,
