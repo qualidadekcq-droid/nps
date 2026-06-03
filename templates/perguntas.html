@@ -52,7 +52,7 @@ h1{
 
 .question-grid{
     display:grid;
-    grid-template-columns: 2fr .8fr 1fr auto auto;
+    grid-template-columns: 2fr .8fr 1fr auto;
     gap:10px;
     align-items:center;
 }
@@ -81,13 +81,6 @@ input:focus, select:focus{
     border-radius:10px;
     font-weight:800;
     cursor:pointer;
-    text-decoration:none;
-    display:inline-block;
-    transition:.2s;
-}
-
-.btn-main:hover{
-    transform:translateY(-2px);
 }
 
 .btn-outline{
@@ -98,8 +91,6 @@ input:focus, select:focus{
     border-radius:10px;
     font-weight:700;
     cursor:pointer;
-    text-decoration:none;
-    display:inline-block;
 }
 
 .btn-danger{
@@ -109,15 +100,12 @@ input:focus, select:focus{
     padding:11px 16px;
     border-radius:10px;
     font-weight:700;
-    text-decoration:none;
-    display:inline-block;
 }
 
 .section-title{
     color:#facc15;
     font-size:.95rem;
     font-weight:800;
-    letter-spacing:1px;
     margin-bottom:14px;
     text-transform:uppercase;
 }
@@ -132,14 +120,13 @@ input:focus, select:focus{
 
 .checkbox-box{
     display:flex;
-    align-items:center;
     justify-content:center;
+    align-items:center;
 }
 
 .checkbox-box input{
     width:18px;
     height:18px;
-    cursor:pointer;
 }
 
 .empty{
@@ -153,14 +140,6 @@ input:focus, select:focus{
     .question-grid{
         grid-template-columns:1fr;
     }
-
-    .page-wrap{
-        padding-right:0;
-    }
-
-    .checkbox-box{
-        justify-content:flex-start;
-    }
 }
 </style>
 
@@ -171,9 +150,7 @@ input:focus, select:focus{
 <h1>Perguntas</h1>
 <div class="subtitle">{{ formulario.titulo }}</div>
 
-<!-- ===================== -->
 <!-- NOVA PERGUNTA -->
-<!-- ===================== -->
 <div class="card-dark">
     <div class="section-title">+ Nova Pergunta</div>
 
@@ -190,59 +167,48 @@ input:focus, select:focus{
                 <option value="textarea">Comentário</option>
             </select>
 
-            <input name="ordem" value="1" placeholder="Ordem">
+            <input name="ordem" value="1">
 
             <button type="submit" class="btn-main">Adicionar</button>
         </div>
     </form>
 </div>
 
-<!-- ===================== -->
-<!-- LISTA DE PERGUNTAS -->
-<!-- ===================== -->
+<!-- LISTA -->
 <div class="card-dark">
     <div class="section-title">Perguntas cadastradas</div>
 
     {% if perguntas %}
 
+    <form method="POST" action="/perguntas/salvar-publicacao/{{ formulario.id }}">
+
         {% for p in perguntas %}
         <div class="question-item">
 
-            <form method="POST" action="/pergunta/editar/{{ p.id }}">
+            <div class="question-grid">
 
-                <div class="question-grid">
+                <input type="text" value="{{ p.pergunta }}" disabled>
 
-                    <input name="pergunta" value="{{ p.pergunta }}" required>
+                <input type="text" value="{{ p.tipo }}" disabled>
 
-                    <input name="ordem" value="{{ p.ordem }}">
+                <input type="text" value="{{ p.ordem }}" disabled>
 
-                    <select name="tipo">
-                        <option value="texto" {% if p.tipo == 'texto' %}selected{% endif %}>Texto</option>
-                        <option value="nota_1_5" {% if p.tipo == 'nota_1_5' %}selected{% endif %}>Nota 1 a 5</option>
-                        <option value="nota_0_10" {% if p.tipo == 'nota_0_10' %}selected{% endif %}>NPS 0 a 10</option>
-                        <option value="sim_nao" {% if p.tipo == 'sim_nao' %}selected{% endif %}>Sim / Não</option>
-                        <option value="textarea" {% if p.tipo == 'textarea' %}selected{% endif %}>Comentário</option>
-                    </select>
-
-                    <!-- NOVO: ativa/desativa no formulário público -->
-                    <div class="checkbox-box">
-                        <input type="checkbox"
-                               name="ativa"
-                               value="1"
-                               {% if p.ativa %}checked{% endif %}>
-                    </div>
-
-                    <button type="submit" class="btn-outline">Salvar</button>
-
-                    <a href="/pergunta/excluir/{{ p.id }}" class="btn-danger"
-                       onclick="return confirm('Deseja excluir esta pergunta?')">
-                       Excluir
-                    </a>
-
+                <div class="checkbox-box">
+                    <input type="checkbox"
+                           name="publica_{{ p.id }}"
+                           value="1"
+                           {% if p.publica %}checked{% endif %}>
                 </div>
-            </form>
+
+            </div>
         </div>
         {% endfor %}
+
+        <button type="submit" class="btn-main" style="width:100%;margin-top:20px;">
+            Salvar perguntas publicadas
+        </button>
+
+    </form>
 
     {% else %}
         <div class="empty">Nenhuma pergunta cadastrada ainda.</div>

@@ -332,6 +332,24 @@ def perguntas_formulario(id):
 
     return render_template("perguntas.html", formulario=form.data, perguntas=perguntas.data)
 
+@app.route("/perguntas/salvar-publicacao/<formulario_id>", methods=["POST"])
+@login_required
+def salvar_publicacao(formulario_id):
+
+    perguntas = supabase.table("perguntas_formulario") \
+        .select("id") \
+        .eq("formulario_id", formulario_id) \
+        .execute()
+
+    for p in perguntas.data:
+        publica = request.form.get(f"publica_{p['id']}") == "1"
+
+        supabase.table("perguntas_formulario") \
+            .update({"publica": publica}) \
+            .eq("id", p["id"]) \
+            .execute()
+
+    return redirect(url_for("perguntas_formulario", id=formulario_id))
 
 @app.route("/pergunta/nova/<formulario_id>", methods=["POST"])
 @login_required
@@ -342,7 +360,7 @@ def nova_pergunta(formulario_id):
         "tipo": request.form.get("tipo"),
         "ordem": request.form.get("ordem"),
         "obrigatoria": True,
-        "ativa": True   # 👈 IMPORTANTE (default ativo)
+        "ativa": request.form.get("ativa") == "1"
     }
 
     supabase.table("perguntas_formulario").insert(dados).execute()
@@ -357,7 +375,7 @@ def editar_pergunta(id):
         "pergunta": request.form.get("pergunta"),
         "tipo": request.form.get("tipo"),
         "ordem": request.form.get("ordem"),
-        "ativa": True if request.form.get("ativa") == "1" else False
+        "ativa": request.form.get("ativa") == "1"
     }
 
     supabase.table("perguntas_formulario") \
@@ -404,6 +422,7 @@ def responder_formulario(token):
     perguntas = supabase.table("perguntas_formulario") \
         .select("*") \
         .eq("formulario_id", form.data["id"]) \
+        .eq("publica",True) \
         .order("ordem") \
         .execute()
 
