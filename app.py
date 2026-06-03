@@ -36,14 +36,12 @@ def login_required(f):
     return wrap
 
 
-# ==========================================================
+# =========================
 # LOGIN / LOGOUT
-# ==========================================================
+# =========================
 @app.route("/login", methods=["GET", "POST"])
 def login():
-
     if request.method == "POST":
-
         email = request.form.get("email")
         senha = request.form.get("password")
 
@@ -69,15 +67,13 @@ def logout():
     return redirect(url_for("login"))
 
 
-# ==========================================================
+# =========================
 # TROCAR SENHA
-# ==========================================================
+# =========================
 @app.route("/trocar-senha", methods=["GET", "POST"])
 @login_required
 def trocar_senha():
-
     if request.method == "POST":
-
         senha_atual = request.form.get("senha_atual")
         nova_senha = request.form.get("nova_senha")
         confirmar = request.form.get("confirmar")
@@ -116,23 +112,15 @@ def trocar_senha():
     return render_template("trocar_senha.html")
 
 
-# ==========================================================
+# =========================
 # DASHBOARD
-# ==========================================================
+# =========================
 @app.route("/")
 @login_required
 def home():
-
     try:
-        resumo = supabase.table("dashboard_resumo") \
-            .select("*") \
-            .single() \
-            .execute()
-
-        ranking = supabase.table("dashboard_ranking") \
-            .select("*") \
-            .single() \
-            .execute()
+        resumo = supabase.table("dashboard_resumo").select("*").single().execute()
+        ranking = supabase.table("dashboard_ranking").select("*").single().execute()
 
         r = resumo.data
         k = ranking.data
@@ -155,13 +143,12 @@ def home():
         return str(e)
 
 
-# ==========================================================
+# =========================
 # TREINAMENTOS
-# ==========================================================
+# =========================
 @app.route("/cadastrar-treinamento", methods=["POST"])
 @login_required
 def cadastrar_treinamento():
-
     try:
         dados = {
             "titulo": request.form.get("titulo"),
@@ -183,25 +170,20 @@ def cadastrar_treinamento():
 @app.route("/treinamentos")
 @login_required
 def treinamentos():
-
     resposta = supabase.table("treinamentos") \
         .select("id,titulo,instrutor,setor,data_treinamento,status") \
         .order("created_at", desc=True) \
         .execute()
 
-    return render_template(
-        "treinamentos.html",
-        treinamentos=resposta.data
-    )
+    return render_template("treinamentos.html", treinamentos=resposta.data)
 
 
-# ==========================================================
+# =========================
 # PARTICIPANTES
-# ==========================================================
+# =========================
 @app.route("/participantes")
 @login_required
 def participantes():
-
     treinamentos = supabase.table("treinamentos") \
         .select("id,titulo") \
         .order("titulo") \
@@ -213,10 +195,10 @@ def participantes():
         treinamentos=treinamentos.data
     )
 
+
 @app.route("/baixar-modelo")
 @login_required
 def baixar_modelo():
-
     output = io.BytesIO()
 
     modelo = pd.DataFrame([
@@ -239,10 +221,10 @@ def baixar_modelo():
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
+
 @app.route("/importar-presenca", methods=["POST"])
 @login_required
 def importar_presenca():
-
     try:
         arquivo = request.files.get("file")
 
@@ -254,16 +236,12 @@ def importar_presenca():
 
         if nome.endswith(".csv"):
             df = pd.read_csv(arquivo)
-
         elif nome.endswith(".xlsx"):
             df = pd.read_excel(arquivo, engine="openpyxl")
-
         elif nome.endswith(".xls"):
             df = pd.read_excel(arquivo, engine="xlrd")
-
         elif nome.endswith(".ods"):
             df = pd.read_excel(arquivo, engine="odf")
-
         else:
             flash("Formato não suportado.")
             return redirect(url_for("participantes"))
@@ -271,7 +249,6 @@ def importar_presenca():
         participantes = []
 
         for _, row in df.iterrows():
-
             nome = str(row.iloc[0]).strip() if len(row) > 0 else ""
             tema = str(row.iloc[1]).strip() if len(row) > 1 else ""
             whatsapp = str(row.iloc[2]).strip() if len(row) > 2 else ""
@@ -298,30 +275,24 @@ def importar_presenca():
         return f"Erro ao importar planilha: {str(e)}"
 
 
-# ==========================================================
+# =========================
 # FORMULÁRIOS
-# ==========================================================
+# =========================
 @app.route("/formularios")
 @login_required
 def formularios():
-
     lista = supabase.table("formularios") \
         .select("*") \
         .order("created_at", desc=True) \
         .execute()
 
-    return render_template(
-        "formularios.html",
-        formularios=lista.data
-    )
+    return render_template("formularios.html", formularios=lista.data)
 
 
 @app.route("/novo-formulario", methods=["GET", "POST"])
 @login_required
 def novo_formulario():
-
     if request.method == "POST":
-
         token = str(int(time.time()))
 
         dados = {
@@ -329,11 +300,11 @@ def novo_formulario():
             "titulo": request.form.get("titulo"),
             "descricao": request.form.get("descricao"),
             "token": token,
-            "status": "ativo"
+            "status": "ativo",
+            "quantidade_perguntas": min(int(request.form.get("quantidade_perguntas", 5)), 20)
         }
 
         supabase.table("formularios").insert(dados).execute()
-
         return redirect(url_for("formularios"))
 
     return render_template("novo_formulario.html")
@@ -342,12 +313,14 @@ def novo_formulario():
 @app.route("/formulario/<id>/perguntas")
 @login_required
 def perguntas_formulario(id):
-
     form = supabase.table("formularios") \
         .select("*") \
         .eq("id", id) \
         .single() \
         .execute()
+
+    if not form.data:
+        return "Formulário não encontrado", 404
 
     perguntas = supabase.table("perguntas_formulario") \
         .select("*") \
@@ -355,17 +328,12 @@ def perguntas_formulario(id):
         .order("ordem") \
         .execute()
 
-    return render_template(
-        "perguntas.html",
-        formulario=form.data,
-        perguntas=perguntas.data
-    )
+    return render_template("perguntas.html", formulario=form.data, perguntas=perguntas.data)
 
 
 @app.route("/pergunta/nova/<formulario_id>", methods=["POST"])
 @login_required
 def nova_pergunta(formulario_id):
-
     dados = {
         "formulario_id": formulario_id,
         "pergunta": request.form.get("pergunta"),
@@ -376,16 +344,12 @@ def nova_pergunta(formulario_id):
 
     supabase.table("perguntas_formulario").insert(dados).execute()
 
-    return redirect(url_for(
-        "perguntas_formulario",
-        id=formulario_id
-    ))
+    return redirect(url_for("perguntas_formulario", id=formulario_id))
 
 
 @app.route("/pergunta/editar/<id>", methods=["POST"])
 @login_required
 def editar_pergunta(id):
-
     dados = {
         "pergunta": request.form.get("pergunta"),
         "tipo": request.form.get("tipo"),
@@ -403,7 +367,6 @@ def editar_pergunta(id):
 @app.route("/pergunta/excluir/<id>")
 @login_required
 def excluir_pergunta(id):
-
     pergunta = supabase.table("perguntas_formulario") \
         .select("formulario_id") \
         .eq("id", id) \
@@ -417,40 +380,44 @@ def excluir_pergunta(id):
         .eq("id", id) \
         .execute()
 
-    return redirect(url_for(
-        "perguntas_formulario",
-        id=formulario_id
-    ))
+    return redirect(url_for("perguntas_formulario", id=formulario_id))
 
 
-# ==========================================================
-# FORMULÁRIO PÚBLICO DINÂMICO
-# ==========================================================
+# =========================
+# FORMULÁRIO PÚBLICO
+# =========================
 @app.route("/formulario/<token>")
 def responder_formulario(token):
-
     form = supabase.table("formularios") \
         .select("*") \
         .eq("token", token) \
         .single() \
         .execute()
 
+    if not form.data:
+        return "Formulário não encontrado", 404
+
+    qtd = form.data.get("quantidade_perguntas") or 5
+
+    try:
+        qtd = int(qtd)
+    except:
+        qtd = 5
+
+    qtd = min(qtd, 20)
+
     perguntas = supabase.table("perguntas_formulario") \
         .select("*") \
         .eq("formulario_id", form.data["id"]) \
         .order("ordem") \
+        .limit(qtd) \
         .execute()
 
-    return render_template(
-        "responder_formulario.html",
-        formulario=form.data,
-        perguntas=perguntas.data
-    )
+    return render_template("responder_formulario.html", formulario=form.data, perguntas=perguntas.data)
 
 
 @app.route("/responder-formulario", methods=["POST"])
 def salvar_formulario():
-
     try:
         formulario_id = request.form.get("formulario_id")
 
@@ -460,7 +427,6 @@ def salvar_formulario():
             .execute()
 
         for p in perguntas.data:
-
             campo = f"pergunta_{p['id']}"
             resposta = request.form.get(campo)
 
@@ -476,13 +442,12 @@ def salvar_formulario():
         return f"Erro ao salvar formulário: {str(e)}"
 
 
-# ==========================================================
-# RELATÓRIOS
-# ==========================================================
+# =========================
+# RELATÓRIOS / EXPORTS / PESQUISA
+# =========================
 @app.route("/relatorios")
 @login_required
 def relatorios():
-
     try:
         feedbacks = supabase.table("respostas")\
             .select("nota,comentario,created_at,treinamentos(titulo)")\
@@ -499,30 +464,16 @@ def relatorios():
                 "titulo": item["treinamentos"]["titulo"] if item["treinamentos"] else "Treinamento",
             })
 
-        return render_template(
-            "relatorios.html",
-            feedbacks=lista
-        )
+        return render_template("relatorios.html", feedbacks=lista)
 
     except Exception as e:
         return str(e)
 
 
-# ==========================================================
-# EXPORTAR PDF
-# ==========================================================
-# ==========================================================
-# EXPORTAR PDF
-# ==========================================================
-# ==========================================================
-# EXPORTAR PDF
-# ==========================================================
 @app.route("/exportar-pdf")
 @login_required
 def exportar_pdf():
-
     try:
-
         res = supabase.table("treinamentos") \
             .select("""
                 id,
@@ -540,22 +491,14 @@ def exportar_pdf():
         treinamentos = res.data
 
         output = io.BytesIO()
-
         p = canvas.Canvas(output, pagesize=A4)
 
         width, height = A4
-
         margem_esquerda = 50
         y = height - 60
 
-        # TÍTULO
         p.setFont("Helvetica-Bold", 18)
-        p.drawString(
-            margem_esquerda,
-            y,
-            "Relatório Mensal de NPS"
-        )
-
+        p.drawString(margem_esquerda, y, "Relatório Mensal de NPS")
         y -= 40
 
         p.setFont("Helvetica", 11)
@@ -563,62 +506,30 @@ def exportar_pdf():
         from datetime import datetime
 
         for t in treinamentos:
-
             respostas = t.get("respostas", [])
 
             media_nota = 0
             media_instrutor = 0
 
-            # =========================================
-            # CALCULAR MÉDIAS
-            # =========================================
             if respostas:
-
-                notas = [
-                    r["nota"]
-                    for r in respostas
-                    if r.get("nota") is not None
-                ]
-
-                notas_instrutor = [
-                    r["instrutor"]
-                    for r in respostas
-                    if r.get("instrutor") is not None
-                ]
+                notas = [r["nota"] for r in respostas if r.get("nota") is not None]
+                notas_instrutor = [r["instrutor"] for r in respostas if r.get("instrutor") is not None]
 
                 if notas:
-                    media_nota = round(
-                        sum(notas) / len(notas),
-                        1
-                    )
+                    media_nota = round(sum(notas) / len(notas), 1)
 
                 if notas_instrutor:
-                    media_instrutor = round(
-                        sum(notas_instrutor) / len(notas_instrutor),
-                        1
-                    )
+                    media_instrutor = round(sum(notas_instrutor) / len(notas_instrutor), 1)
 
-            # =========================================
-            # FORMATAR DATA
-            # =========================================
             data_formatada = ""
-
             data_original = t.get("data_treinamento")
 
             if data_original:
-
                 try:
-                    data_formatada = datetime.strptime(
-                        data_original,
-                        "%Y-%m-%d"
-                    ).strftime("%d/%m/%Y")
-
+                    data_formatada = datetime.strptime(data_original, "%Y-%m-%d").strftime("%d/%m/%Y")
                 except:
                     data_formatada = str(data_original)
 
-            # =========================================
-            # TEXTO DO RELATÓRIO
-            # =========================================
             texto = (
                 f"Curso: {t['titulo']} | "
                 f"Instrutor: {t['instrutor']} | "
@@ -628,21 +539,12 @@ def exportar_pdf():
                 f"Média Instrutor: {media_instrutor}/5"
             )
 
-            # =========================================
-            # QUEBRA AUTOMÁTICA DE LINHA
-            # =========================================
             linhas = []
 
             while p.stringWidth(texto, "Helvetica", 11) > 470:
-
                 corte = len(texto)
 
-                while p.stringWidth(
-                    texto[:corte],
-                    "Helvetica",
-                    11
-                ) > 470:
-
+                while p.stringWidth(texto[:corte], "Helvetica", 11) > 470:
                     corte -= 1
 
                 corte = texto[:corte].rfind(" ")
@@ -651,37 +553,22 @@ def exportar_pdf():
                     break
 
                 linhas.append(texto[:corte])
-
                 texto = texto[corte:].strip()
 
             linhas.append(texto)
 
-            # =========================================
-            # ESCREVER NO PDF
-            # =========================================
             for linha in linhas:
-
-                p.drawString(
-                    margem_esquerda,
-                    y,
-                    linha
-                )
-
+                p.drawString(margem_esquerda, y, linha)
                 y -= 18
 
-                # NOVA PÁGINA
                 if y < 60:
-
                     p.showPage()
-
                     p.setFont("Helvetica", 11)
-
                     y = height - 60
 
             y -= 10
 
         p.save()
-
         output.seek(0)
 
         return send_file(
@@ -693,6 +580,7 @@ def exportar_pdf():
 
     except Exception as e:
         return f"Erro ao gerar PDF: {str(e)}"
+
 
 @app.route("/exportar-excel")
 @login_required
@@ -722,14 +610,13 @@ def exportar_excel():
     except Exception as e:
         return f"Erro ao gerar Excel: {str(e)}"
 
-# ==========================================================
-# PESQUISA ANTIGA (TREINAMENTO)
-# ==========================================================
+
+# =========================
+# PESQUISA ANTIGA
+# =========================
 @app.route("/pesquisa")
 def pesquisa():
-
     try:
-
         id_treino = request.args.get("id_treino")
 
         if not id_treino:
@@ -756,9 +643,7 @@ def pesquisa():
 
 @app.route("/salvar-pesquisa", methods=["POST"])
 def salvar_pesquisa():
-
     try:
-
         nota = request.form.get("nota")
         clareza = request.form.get("clareza")
         aplicabilidade = request.form.get("aplicabilidade")
@@ -783,11 +668,11 @@ def salvar_pesquisa():
     except Exception as e:
         print(e)
         return f"Erro ao salvar pesquisa: {str(e)}", 500
-   
 
-# ==========================================================
+
+# =========================
 # START
-# ==========================================================
+# =========================
 if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
