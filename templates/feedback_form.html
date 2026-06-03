@@ -12,125 +12,253 @@
     <meta name="theme-color" content="#000000">
 
     <style>
-        body { background: #000; color: #fff; font-family: 'Segoe UI', Roboto, sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; margin: 0; }
-        .survey-card { background: #0a0a0a; border: 1px solid rgba(250, 204, 21, 0.2); border-radius: 28px; padding: 35px; max-width: 480px; width: 100%; box-shadow: 0 25px 50px rgba(0,0,0,0.8); text-align: center; }
-        
-        h2 { color: #facc15; font-weight: 800; margin-bottom: 5px; font-size: 1.6rem; letter-spacing: -0.5px; }
-        .instruction { opacity: 0.6; font-size: 0.9rem; margin-bottom: 30px; line-height: 1.4; }
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
 
-        /* Escala NPS 0 a 10 */
-        .nps-container { display: flex; justify-content: center; gap: 8px; margin-bottom: 10px;flex-wrap: wrap; }
-        .nps-item { width: 42px; }
-        .nps-item input { display: none; }
-        .nps-item label { width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: #151515; border: 1px solid #222; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 0.85rem; color: #666; }
-        .nps-item input:checked + label { background: #facc15; color: #000; border-color: #facc15; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(250, 204, 21, 0.3); }
+        .survey-card {
+            background: #0a0a0a;
+            border: 1px solid rgba(250, 204, 21, 0.2);
+            border-radius: 28px;
+            padding: 35px;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.8);
+            text-align: center;
+        }
 
-        /* Grupos de Avaliação */
-        .rating-group { background: #111; padding: 18px; border-radius: 18px; border: 1px solid #1a1a1a; margin-bottom: 20px; text-align: left; }
-        .rating-label { font-size: 0.75rem; font-weight: 800; color: #facc15; margin-bottom: 12px; display: block; text-transform: uppercase; letter-spacing: 1.5px; }
-        
+        h2 {
+            color: #facc15;
+            font-weight: 800;
+            margin-bottom: 5px;
+            font-size: 1.6rem;
+        }
 
-        textarea.form-control { background: #111; border: 1px solid #222; color: #fff; border-radius: 15px; padding: 15px; font-size: 0.9rem; width: 100%; box-sizing: border-box; resize: none; }
-        textarea:focus { border-color: #facc15; outline: none; background: #151515; }
+        .instruction {
+            opacity: 0.6;
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
 
-        .btn-submit { background: #facc15; color: #000; border: none; width: 100%; padding: 18px; border-radius: 16px; font-weight: 800; font-size: 1rem; margin-top: 15px; transition: 0.3s; text-transform: uppercase; cursor: pointer; letter-spacing: 1px; }
-        .btn-submit:hover { background: #fff; transform: translateY(-2px); }
+        .rating-group {
+            background: #111;
+            padding: 18px;
+            border-radius: 18px;
+            border: 1px solid #1a1a1a;
+            margin-bottom: 20px;
+            text-align: left;
+        }
 
-        .footer-anonimo { font-size: 0.7rem; opacity: 0.4; margin-top: 25px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .rating-label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #facc15;
+            margin-bottom: 12px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
 
-        @media (max-width: 400px) {
-            .nps-container { flex-wrap: wrap; justify-content: center; }
-            .nps-item { flex: unset; width: 35px; }
+        .nps-container {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nps-item {
+            width: 42px;
+        }
+
+        .nps-item input {
+            display: none;
+        }
+
+        .nps-item label {
+            width: 100%;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #151515;
+            border: 1px solid #222;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .nps-item input:checked + label {
+            background: #facc15;
+            color: #000;
+            border-color: #facc15;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(250, 204, 21, 0.3);
+        }
+
+        textarea.form-control,
+        input.form-control {
+            background: #111;
+            border: 1px solid #222;
+            color: #fff;
+            border-radius: 15px;
+            padding: 15px;
+            font-size: 0.9rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        textarea:focus,
+        input:focus {
+            border-color: #facc15;
+            outline: none;
+            background: #151515;
+        }
+
+        .btn-submit {
+            background: #facc15;
+            color: #000;
+            border: none;
+            width: 100%;
+            padding: 18px;
+            border-radius: 16px;
+            font-weight: 800;
+            font-size: 1rem;
+            margin-top: 15px;
+            cursor: pointer;
+        }
+
+        .btn-submit:hover {
+            background: #fff;
+            transform: translateY(-2px);
+        }
+
+        .footer-anonimo {
+            font-size: 0.7rem;
+            opacity: 0.4;
+            margin-top: 25px;
+            display: flex;
+            justify-content: center;
+            gap: 6px;
         }
     </style>
 </head>
+
 <body>
-    <div class="survey-card">
-        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 50px; margin-bottom: 15px;">
-        <h2>Sua opinião vale muito!</h2>
-        <p class="instruction">O quanto você recomendaria o treinamento<br><strong>{{ treinamento_nome }}</strong> para um colega?</p>
-        
-        <form action="/salvar-pesquisa" method="POST">
-            <input type="hidden" name="treinamento_id" value="{{ treinamento_id }}">
+<div class="survey-card">
 
-            <!-- NPS 0 a 10 -->
-            <div class="nps-container">
-                {% for i in range(11) %}
-                <div class="nps-item">
-                    <input type="radio" name="nota" value="{{ i }}" id="n{{ i }}" required>
-                    <label for="n{{ i }}">{{ i }}</label>
+    <img src="{{ url_for('static', filename='logo.png') }}" style="width:50px;margin-bottom:15px;">
+
+    <h2>Sua opinião vale muito!</h2>
+
+    <p class="instruction">
+        Responda o formulário abaixo com sinceridade.
+    </p>
+
+    <form action="/responder-formulario" method="POST">
+        <input type="hidden" name="formulario_id" value="{{ formulario.id }}">
+
+        {% for p in perguntas %}
+
+        <div class="rating-group">
+            <span class="rating-label">{{ p.pergunta }}</span>
+
+            {% if p.tipo == "nota_0_10" %}
+
+                <div class="nps-container">
+                    {% for i in range(11) %}
+                    <div class="nps-item">
+                        <input type="radio"
+                               name="pergunta_{{ p.id }}"
+                               value="{{ i }}"
+                               id="p{{ p.id }}_{{ i }}"
+                               required>
+                        <label for="p{{ p.id }}_{{ i }}">{{ i }}</label>
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
-            </div>
 
-            <!-- Perguntas de Estrelas -->
-            <!-- Clareza -->
-<div class="rating-group">
-    <span class="rating-label">O conteúdo foi claro?</span>
+            {% elif p.tipo == "nota_1_5" %}
 
-    <div class="nps-container">
-        {% for i in range(1, 6) %}
-        <div class="nps-item">
-            <input type="radio"
-                   name="clareza"
-                   value="{{ i }}"
-                   id="c{{ i }}"
-                   required>
+                <div class="nps-container">
+                    {% for i in range(1, 6) %}
+                    <div class="nps-item">
+                        <input type="radio"
+                               name="pergunta_{{ p.id }}"
+                               value="{{ i }}"
+                               id="p{{ p.id }}_{{ i }}"
+                               required>
+                        <label for="p{{ p.id }}_{{ i }}">{{ i }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
 
-            <label for="c{{ i }}">{{ i }}</label>
+            {% elif p.tipo == "sim_nao" %}
+
+                <div class="nps-container">
+                    {% for op in ["Sim", "Não"] %}
+                    <div class="nps-item">
+                        <input type="radio"
+                               name="pergunta_{{ p.id }}"
+                               value="{{ op }}"
+                               id="p{{ p.id }}_{{ op }}"
+                               required>
+                        <label for="p{{ p.id }}_{{ op }}">{{ op }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+
+            {% elif p.tipo == "textarea" %}
+
+                <textarea name="pergunta_{{ p.id }}"
+                          class="form-control"
+                          rows="3"
+                          placeholder="Digite sua resposta..."
+                          required></textarea>
+
+            {% else %}
+
+                <input type="text"
+                       name="pergunta_{{ p.id }}"
+                       class="form-control"
+                       placeholder="Digite sua resposta..."
+                       required>
+
+            {% endif %}
         </div>
+
         {% endfor %}
-    </div>
-</div>
 
-<!-- Aplicabilidade -->
-<div class="rating-group">
-    <span class="rating-label">É aplicável no dia a dia?</span>
-
-    <div class="nps-container">
-        {% for i in range(1, 6) %}
-        <div class="nps-item">
-            <input type="radio"
-                   name="aplicabilidade"
-                   value="{{ i }}"
-                   id="a{{ i }}"
-                   required>
-
-            <label for="a{{ i }}">{{ i }}</label>
+        <div style="text-align:left;margin-bottom:10px;">
+            <label class="rating-label" style="margin-left:10px;">
+                Comentário Adicional
+            </label>
+            <textarea name="comentario"
+                      class="form-control"
+                      rows="3"
+                      placeholder="Opcional: sua identidade será preservada..."></textarea>
         </div>
-        {% endfor %}
-    </div>
-</div>
 
-<!-- Instrutor -->
-<div class="rating-group">
-    <span class="rating-label">Avaliação do Instrutor</span>
+        <button type="submit" class="btn-submit">
+            Enviar Feedback
+        </button>
 
-    <div class="nps-container">
-        {% for i in range(1, 6) %}
-        <div class="nps-item">
-            <input type="radio"
-                   name="instrutor"
-                   value="{{ i }}"
-                   id="i{{ i }}"
-                   required>
-
-            <label for="i{{ i }}">{{ i }}</label>
+        <div class="footer-anonimo">
+            🔒 Pesquisa 100% Anônima • Recursos Humanos Cacique
         </div>
-        {% endfor %}
-    </div>
-</div>
-            <div style="text-align: left; margin-bottom: 10px;">
-                <label class="rating-label" style="margin-left: 10px;">Comentário Adicional</label>
-                <textarea name="comentario" class="form-control" rows="3" placeholder="Opcional: Sua identidade será preservada..."></textarea>
-            </div>
 
-            <button type="submit" class="btn-submit">Enviar Feedback</button>
-
-           <div class="footer-anonimo">
-    🔒 Pesquisa 100% Anônima • Recursos Humanos Cacique
+    </form>
 </div>
-        </form>
-    </div>
 </body>
 </html>

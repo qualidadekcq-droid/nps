@@ -293,6 +293,7 @@ def formularios():
 @login_required
 def novo_formulario():
     if request.method == "POST":
+
         token = str(int(time.time()))
 
         dados = {
@@ -301,7 +302,7 @@ def novo_formulario():
             "descricao": request.form.get("descricao"),
             "token": token,
             "status": "ativo",
-            "quantidade_perguntas": min(int(request.form.get("quantidade_perguntas", 5)), 20)
+            "quantidade_perguntas": None
         }
 
         supabase.table("formularios").insert(dados).execute()
@@ -384,7 +385,7 @@ def excluir_pergunta(id):
 
 
 # =========================
-# FORMULÁRIO PÚBLICO
+# FORMULÁRIO PÚBLICO (AJUSTADO)
 # =========================
 @app.route("/formulario/<token>")
 def responder_formulario(token):
@@ -397,23 +398,18 @@ def responder_formulario(token):
     if not form.data:
         return "Formulário não encontrado", 404
 
-    qtd = form.data.get("quantidade_perguntas") or 5
-
-    try:
-        qtd = int(qtd)
-    except:
-        qtd = 5
-
-    qtd = min(qtd, 20)
-
+    # 🔥 AJUSTE PRINCIPAL: sem limite por quantidade
     perguntas = supabase.table("perguntas_formulario") \
         .select("*") \
         .eq("formulario_id", form.data["id"]) \
         .order("ordem") \
-        .limit(qtd) \
         .execute()
 
-    return render_template("responder_formulario.html", formulario=form.data, perguntas=perguntas.data)
+    return render_template(
+        "responder_formulario.html",
+        formulario=form.data,
+        perguntas=perguntas.data
+    )
 
 
 @app.route("/responder-formulario", methods=["POST"])
@@ -666,7 +662,6 @@ def salvar_pesquisa():
         return render_template("obrigado.html")
 
     except Exception as e:
-        print(e)
         return f"Erro ao salvar pesquisa: {str(e)}", 500
 
 

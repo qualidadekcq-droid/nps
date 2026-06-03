@@ -1,4 +1,3 @@
-
 {% extends 'base.html' %}
 {% block content %}
 
@@ -131,7 +130,7 @@
     <div class="top-bar">
         <div>
             <h1 class="title">Formulários</h1>
-            <div class="subtitle">Gerencie pesquisas, clima, avaliação e links públicos</div>
+            <div class="subtitle">Gerencie pesquisas, avaliações e links públicos</div>
         </div>
 
         <a href="/novo-formulario" class="btn-main">+ Novo Formulário</a>
@@ -139,57 +138,59 @@
 
     {% if formularios %}
 
-<div class="grid-cards">
+    <div class="grid-cards">
 
-    {% for f in formularios %}
-    <div class="card-form">
+        {% for f in formularios %}
+        <div class="card-form">
 
-        <span class="badge">{{ f.tipo }}</span>
+            <span class="badge">{{ f.tipo }}</span>
 
-        <div class="form-title">{{ f.titulo }}</div>
+            <div class="form-title">{{ f.titulo }}</div>
 
-        <div style="
-            margin-top:8px;
-            font-size:.85rem;
-            opacity:.75;
-            background:#0b0b0b;
-            padding:8px 10px;
-            border-radius:10px;
-            border:1px solid rgba(255,255,255,.06);
-        ">
-            Perguntas enviadas:
-            <b style="color:#facc15;">
-                {{ f.quantidade_perguntas if f.quantidade_perguntas else 5 }}
-            </b>
-            <span style="opacity:.6;">/ 20</span>
+            <div style="
+                margin-top:8px;
+                font-size:.85rem;
+                opacity:.75;
+                background:#0b0b0b;
+                padding:8px 10px;
+                border-radius:10px;
+                border:1px solid rgba(255,255,255,.06);
+            ">
+                Status:
+                <b style="color:#facc15;">
+                    Formulário ativo
+                </b>
+            </div>
+
+            <div class="link-box">
+                {{ request.host_url }}formulario/{{ f.token }}
+            </div>
+
+            <div class="actions">
+
+                <a href="/formulario/{{ f.id }}/perguntas" class="btn-sec">
+                    Editar Perguntas
+                </a>
+
+                <a href="/formulario/{{ f.token }}" class="btn-sec" target="_blank">
+                    Abrir Formulário
+                </a>
+
+                <a href="/formulario/excluir/{{ f.id }}"
+                   class="btn-sec btn-danger"
+                   onclick="return confirm('Deseja excluir este formulário?')">
+                    Excluir
+                </a>
+
+            </div>
+
         </div>
-
-        <div class="link-box">
-            {{ request.host_url }}formulario/{{ f.token }}
-        </div>
-
-        <div class="actions">
-            <a href="/formulario/{{ f.id }}/perguntas" class="btn-sec">
-                Editar Perguntas
-            </a>
-
-            <a href="/formulario/{{ f.id }}/perguntas" class="btn-sec">
-                Administrar
-            </a>
-
-            <a href="/formulario/excluir/{{ f.id }}"
-               class="btn-sec btn-danger"
-               onclick="return confirm('Deseja excluir este formulário?')">
-                Excluir
-            </a>
-        </div>
+        {% endfor %}
 
     </div>
-    {% endfor %}
 
-</div>
+    {% else %}
 
-{% else %}
     <div class="empty">
         Nenhum formulário cadastrado ainda.
     </div>
@@ -199,4 +200,3 @@
 </div>
 
 {% endblock %}
-```
