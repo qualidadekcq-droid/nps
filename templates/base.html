@@ -73,15 +73,26 @@
         }
 
         .content {
-            margin-left: 264px;
+            /* Se for a rota de resposta, remove a margem esquerda para centralizar a tela */
+            margin-left: {% if '/responder-formulario' in request.path %}0{% else %}264px{% endif %};
             padding: 40px;
             min-height: 100vh;
+        }
+
+        /* Ajuste responsivo para telas menores quando o painel administrativo estiver ativo */
+        @media (max-width: 768px) {
+            .content {
+                margin-left: 0;
+                padding: 20px;
+            }
         }
     </style>
 </head>
 
 <body>
 
+    <!-- SÓ RENDERIZA A SIDEBAR SE NÃO FOR A ROTA DE RESPONDER O FORMULÁRIO -->
+    {% if '/responder-formulario' not in request.path %}
     <div class="sidebar">
 
         <div class="sidebar-header">
@@ -127,6 +138,7 @@
 
         </nav>
     </div>
+    {% endif %}
 
     <div class="content">
 
