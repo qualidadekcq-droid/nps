@@ -20,4 +20,21 @@
 
 </div>
 
+<!-- CÓDIGO CIRÚRGICO ADICIONADO ABAIXO PARA REMOVER A SIDEBAR APENAS NESTA TELA -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Seleciona a barra lateral criada pelo base.html e a esconde
+        var sidebar = document.querySelector('.sidebar');
+        if (sidebar) {
+            sidebar.style.display = 'none';
+        }
+        
+        // Seleciona o bloco de conteúdo e remove a margem esquerda para centralizar a tela
+        var content = document.querySelector('.content');
+        if (content) {
+            content.style.marginLeft = '0px';
+        }
+    });
+</script>
+
 {% endblock %}
