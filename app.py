@@ -407,30 +407,34 @@ def excluir_pergunta(id):
 # =========================
 # FORMULÁRIO PÚBLICO (AJUSTADO)
 # =========================
-@app.route("/formulario/<token>")
-def responder_formulario(token):
-    form = supabase.table("formularios") \
-        .select("*") \
-        .eq("token", token) \
-        .single() \
-        .execute()
+@app.route("/f/<token>")
+def exibir_formulario_publico(token):
+    try:
+        form = supabase.table("formularios") \
+            .select("*") \
+            .eq("token", token) \
+            .execute()
 
-    if not form.data:
-        return "Formulário não encontrado", 404
+        if not form.data:
+            return "Formulário não encontrado.", 404
 
-    # 🔥 AJUSTE PRINCIPAL: sem limite por quantidade
-    perguntas = supabase.table("perguntas_formulario") \
-        .select("*") \
-        .eq("formulario_id", form.data["id"]) \
-        .eq("publica",True) \
-        .order("ordem") \
-        .execute()
+        formulario = form.data[0]
 
-    return render_template(
-        "responder_formulario.html",
-        formulario=form.data,
-        perguntas=perguntas.data
-    )
+        perguntas = supabase.table("perguntas_formulario") \
+            .select("*") \
+            .eq("formulario_id", formulario["id"]) \
+            .eq("publica", True) \
+            .order("ordem") \
+            .execute()
+
+        return render_template(
+            "formulario.html",
+            formulario=formulario,
+            perguntas=perguntas.data
+        )
+
+    except Exception as e:
+        return f"Erro ao carregar formulário: {str(e)}", 500
 
 
 @app.route("/responder-formulario", methods=["POST"])
@@ -447,8 +451,7 @@ def salvar_formulario():
             campo = f"pergunta_{p['id']}"
             resposta = request.form.get(campo)
 
-            # 🔥 CORREÇÃO REAL AQUI
-            if resposta is None or resposta == "":
+            if not resposta:
                 continue
 
             supabase.table("respostas_formulario").insert({
@@ -460,7 +463,7 @@ def salvar_formulario():
         return render_template("obrigado.html")
 
     except Exception as e:
-        return f"Erro ao salvar formulário: {str(e)}"
+        return f"Erro ao salvar formulário: {str(e)}", 500
 
 
 # =========================
@@ -475,50 +478,6 @@ def formularios():
         .execute()
     return render_template("formularios.html", formularios=lista.data)
 
-
-# ROTA QUE FALTAVA: Exibe o formulário customizado para o usuário responder
-@app.route("/formulario/<id>")
-def exibir_formulario(id):
-    try:
-        # Busca o formulário específico (clima, etc) usando .execute() para evitar quebras se não existir
-        busca_form = supabase.table("formularios").select("*").eq("id", id).execute()
-        
-        if not busca_form.data:
-            return "Formulário não encontrado.", 404
-            
-        # Busca as perguntas vinculadas a este formulário específico
-        busca_perguntas = supabase.table("perguntas").select("*").eq("formulario_id", id).execute()
-        
-        return render_template(
-            "formulario.html", 
-            formulario=busca_form.data[0], 
-            perguntas=busca_perguntas.data
-        )
-    except Exception as e:
-        return f"Erro ao carregar o formulário: {str(e)}", 500
-
-
-@app.route("/responder-formulario", methods=["POST"])
-def responder_formulario():
-    try:
-        formulario_id = request.form.get("formulario_id")
-        
-        # Coleta todas as respostas enviadas dinamicamente
-        for key, value in request.form.items():
-            if key.startswith("pergunta_"):
-                pergunta_id = key.replace("pergunta_", "")
-                
-                dados_resposta = {
-                    "formulario_id": formulario_id,
-                    "pergunta_id": pergunta_id,
-                    "resposta": value
-                }
-                # Insere a resposta na tabela de respostas de formulários customizados
-                supabase.table("respostas_formularios").insert(dados_resposta).execute()
-                
-        return render_template("obrigado.html")
-    except Exception as e:
-        return f"Erro ao salvar respostas: {str(e)}", 500
 
 
 # =========================
