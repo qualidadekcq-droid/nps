@@ -658,7 +658,8 @@ def pesquisa():
             treinamento_nome=treino.data["titulo"]
         )
 
-    except Exception as e:
+        except Exception as e:
+        print("ERRO DETALHADO DO SUPABASE:", repr(e)) # Verifique o terminal do VS Code / Prompt
         return f"Erro ao carregar pesquisa: {str(e)}", 500
 
 
