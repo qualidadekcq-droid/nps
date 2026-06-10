@@ -1,240 +1,284 @@
+```html
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulário de Avaliação</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon-32x32.png') }}">
+<title>Avaliação de Treinamento</title>
 
-    <style>
-        body {
-            background: #000;
-            color: #fff;
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            margin: 0;
-        }
+<link rel="shortcut icon" href="{{ url_for('static', filename='favicon-32x32.png') }}">
 
-        .survey-card {
-            background: #0a0a0a;
-            border: 1px solid rgba(250, 204, 21, 0.2);
-            border-radius: 28px;
-            padding: 35px;
-            max-width: 520px;
-            width: 100%;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.8);
-            text-align: center;
-        }
+<style>
 
-        h2 {
-            color: #facc15;
-            font-weight: 800;
-            margin-bottom: 5px;
-            font-size: 1.6rem;
-        }
+body{
+    margin:0;
+    padding:20px;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:#000;
+    color:#fff;
+    font-family:'Segoe UI',sans-serif;
+}
 
-        .instruction {
-            opacity: 0.6;
-            font-size: 0.9rem;
-            margin-bottom: 25px;
-        }
+.container{
+    width:100%;
+    max-width:700px;
+}
 
-        .rating-group {
-            background: #111;
-            padding: 18px;
-            border-radius: 18px;
-            border: 1px solid #1a1a1a;
-            margin-bottom: 20px;
-            text-align: left;
-        }
+.card{
+    background:#0b0b0b;
+    border:1px solid rgba(250,204,21,.15);
+    border-radius:24px;
+    padding:35px;
+    box-shadow:0 20px 50px rgba(0,0,0,.6);
+}
 
-        .rating-label {
-            font-size: 0.75rem;
-            font-weight: 800;
-            color: #facc15;
-            margin-bottom: 12px;
-            display: block;
-            text-transform: uppercase;
-        }
+.logo{
+    width:60px;
+    display:block;
+    margin:0 auto 20px auto;
+}
 
-        .nps-container {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
+h1{
+    text-align:center;
+    color:#facc15;
+    margin:0;
+    font-size:2rem;
+}
 
-        .nps-item {
-            width: 42px;
-        }
+.subtitle{
+    text-align:center;
+    opacity:.7;
+    margin-top:8px;
+    margin-bottom:30px;
+}
 
-        .nps-item input {
-            display: none;
-        }
+.question{
+    background:#111;
+    border:1px solid #1c1c1c;
+    border-radius:16px;
+    padding:18px;
+    margin-bottom:20px;
+}
 
-        .nps-item label {
-            width: 100%;
-            aspect-ratio: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #151515;
-            border: 1px solid #222;
-            border-radius: 8px;
-            font-weight: 700;
-            cursor: pointer;
-            font-size: 0.85rem;
-            color: #666;
-        }
+.question-title{
+    display:block;
+    font-size:.9rem;
+    font-weight:700;
+    margin-bottom:12px;
+    color:#facc15;
+    text-transform:uppercase;
+}
 
-        .nps-item input:checked + label {
-            background: #facc15;
-            color: #000;
-            border-color: #facc15;
-        }
+.nps-grid{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    justify-content:center;
+}
 
-        textarea, input {
-            background: #111;
-            border: 1px solid #222;
-            color: #fff;
-            border-radius: 12px;
-            padding: 12px;
-            width: 100%;
-            box-sizing: border-box;
-        }
+.nps-grid label{
+    cursor:pointer;
+}
 
-        .btn-submit {
-            background: #facc15;
-            color: #000;
-            border: none;
-            width: 100%;
-            padding: 16px;
-            border-radius: 14px;
-            font-weight: 800;
-            cursor: pointer;
-            margin-top: 15px;
-        }
+.nps-grid input{
+    display:none;
+}
 
-        .btn-submit:hover {
-            background: #fff;
-        }
+.nps-grid span{
+    width:42px;
+    height:42px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#1a1a1a;
+    border-radius:10px;
+    border:1px solid #2a2a2a;
+    font-weight:700;
+    color:#888;
+}
 
-        .footer-anonimo {
-            font-size: 0.7rem;
-            opacity: 0.4;
-            margin-top: 25px;
-        }
+.nps-grid input:checked + span{
+    background:#facc15;
+    color:#000;
+    border-color:#facc15;
+}
 
-        .optional {
-            font-size: 0.7rem;
-            opacity: 0.5;
-        }
-    </style>
+select,
+textarea{
+    width:100%;
+    background:#111;
+    color:#fff;
+    border:1px solid #222;
+    border-radius:12px;
+    padding:12px;
+    box-sizing:border-box;
+}
+
+textarea{
+    resize:vertical;
+    min-height:120px;
+}
+
+.btn{
+    width:100%;
+    padding:16px;
+    border:none;
+    border-radius:14px;
+    background:#facc15;
+    color:#000;
+    font-weight:800;
+    cursor:pointer;
+    font-size:1rem;
+}
+
+.btn:hover{
+    background:#ffe36b;
+}
+
+.footer{
+    text-align:center;
+    margin-top:20px;
+    opacity:.45;
+    font-size:.75rem;
+}
+
+</style>
 </head>
 
 <body>
 
-<div class="survey-card">
+<div class="container">
 
-    <img src="{{ url_for('static', filename='logo.png') }}" style="width:50px;margin-bottom:15px;">
+    <div class="card">
 
-    <h2>{{ formulario.titulo }}</h2>
+        <img class="logo"
+             src="{{ url_for('static', filename='logo.png') }}">
 
-    <p class="instruction">
-        Responda com sinceridade
-    </p>
+        <h1>{{ treinamento_nome }}</h1>
 
-    <form action="/responder-formulario" method="POST">
-        <input type="hidden" name="formulario_id" value="{{ formulario.id }}">
+        <div class="subtitle">
+            Sua opinião é muito importante para nós.
+        </div>
 
-        {% for p in perguntas %}
+        <form method="POST" action="/salvar-pesquisa">
 
-        <div class="rating-group">
-            <span class="rating-label">{{ p.pergunta }}</span>
+            <input type="hidden"
+                   name="treinamento_id"
+                   value="{{ treinamento_id }}">
 
-            {% if p.tipo == "nota_0_10" %}
+            <!-- NPS -->
 
-                <div class="nps-container">
+            <div class="question">
+
+                <span class="question-title">
+                    De 0 a 10, qual a probabilidade de recomendar este treinamento?
+                </span>
+
+                <div class="nps-grid">
+
                     {% for i in range(11) %}
-                    <div class="nps-item">
+                    <label>
                         <input type="radio"
-                               name="pergunta_{{ p.id }}"
+                               name="nota"
                                value="{{ i }}"
-                               id="p{{ p.id }}_{{ i }}"
                                required>
-                        <label for="p{{ p.id }}_{{ i }}">{{ i }}</label>
-                    </div>
+                        <span>{{ i }}</span>
+                    </label>
                     {% endfor %}
+
                 </div>
 
-            {% elif p.tipo == "nota_1_5" %}
+            </div>
 
-                <div class="nps-container">
-                    {% for i in range(1, 6) %}
-                    <div class="nps-item">
-                        <input type="radio"
-                               name="pergunta_{{ p.id }}"
-                               value="{{ i }}"
-                               id="p{{ p.id }}_{{ i }}"
-                               required>
-                        <label for="p{{ p.id }}_{{ i }}">{{ i }}</label>
-                    </div>
-                    {% endfor %}
-                </div>
+            <!-- Clareza -->
 
-            {% elif p.tipo == "sim_nao" %}
+            <div class="question">
 
-                <div class="nps-container">
-                    {% for op in ["Sim", "Não"] %}
-                    <div class="nps-item">
-                        <input type="radio"
-                               name="pergunta_{{ p.id }}"
-                               value="{{ op }}"
-                               id="p{{ p.id }}_{{ op }}"
-                               required>
-                        <label for="p{{ p.id }}_{{ op }}">{{ op }}</label>
-                    </div>
-                    {% endfor %}
-                </div>
+                <span class="question-title">
+                    Clareza do conteúdo
+                </span>
 
-            {% elif p.tipo == "textarea" %}
+                <select name="clareza" required>
+                    <option value="">Selecione</option>
+                    <option value="1">1 - Muito ruim</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 - Excelente</option>
+                </select>
 
-                <textarea name="pergunta_{{ p.id }}"
-                          rows="3"
-                          placeholder="Digite sua resposta..."></textarea>
+            </div>
 
-            {% else %}
+            <!-- Aplicabilidade -->
 
-                <input type="text"
-                       name="pergunta_{{ p.id }}"
-                       placeholder="Digite sua resposta...">
+            <div class="question">
 
-            {% endif %}
-        </div>
+                <span class="question-title">
+                    Aplicabilidade do conteúdo
+                </span>
 
-        {% endfor %}
+                <select name="aplicabilidade" required>
+                    <option value="">Selecione</option>
+                    <option value="1">1 - Muito ruim</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 - Excelente</option>
+                </select>
 
-        <div class="rating-group">
-            <span class="rating-label">Comentário adicional</span>
-            <textarea name="comentario" rows="3"></textarea>
-        </div>
+            </div>
 
-        <button type="submit" class="btn-submit">
-            Enviar
-        </button>
+            <!-- Instrutor -->
 
-        <div class="footer-anonimo">
-            🔒 Pesquisa anônima
-        </div>
+            <div class="question">
 
-    </form>
+                <span class="question-title">
+                    Avaliação do instrutor
+                </span>
+
+                <select name="instrutor" required>
+                    <option value="">Selecione</option>
+                    <option value="1">1 - Muito ruim</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5 - Excelente</option>
+                </select>
+
+            </div>
+
+            <!-- Comentário -->
+
+            <div class="question">
+
+                <span class="question-title">
+                    Comentários e sugestões
+                </span>
+
+                <textarea
+                    name="comentario"
+                    placeholder="Digite aqui sua opinião..."></textarea>
+
+            </div>
+
+            <button class="btn" type="submit">
+                Enviar Avaliação
+            </button>
+
+            <div class="footer">
+                🔒 Resposta anônima
+            </div>
+
+        </form>
+
+    </div>
 
 </div>
 
 </body>
 </html>
+```
