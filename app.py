@@ -466,19 +466,6 @@ def salvar_formulario():
         return f"Erro ao salvar formulário: {str(e)}", 500
 
 
-# =========================
-# FORMULÁRIOS
-# =========================
-@app.route("/formularios")
-@login_required
-def formularios():
-    lista = supabase.table("formularios") \
-        .select("*") \
-        .order("created_at", desc=True) \
-        .execute()
-    return render_template("formularios.html", formularios=lista.data)
-
-
 
 # =========================
 # PESQUISA (NPS Fixo de Treinamentos)
