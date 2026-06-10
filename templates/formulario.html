@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div style="max-width:700px;margin:auto;padding:30px">
+
+<h2>{{ formulario.titulo }}</h2>
+
+<form method="POST" action="/responder-formulario">
+    <input type="hidden" name="formulario_id" value="{{ formulario.id }}">
+
+    {% for p in perguntas %}
+        <div style="margin-bottom:15px;">
+            <label>{{ p.pergunta }}</label><br>
+            <input name="pergunta_{{ p.id }}" style="width:100%;padding:8px;">
+        </div>
+    {% endfor %}
+
+    <button type="submit">Enviar</button>
+</form>
+
+</div>
+
+{% endblock %}
