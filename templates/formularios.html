@@ -164,28 +164,27 @@
             </div>
 
             <!-- Ajustado para exibir o link real da rota de resposta funcional -->
-            <div class="link-box">
-                {{ request.host_url }}pesquisa?id_treino={{ f.treinamento_id if f.treinamento_id else f.id }}
-            </div>
+     <div class="link-box">
+    {{ request.host_url }}f/{{ f.token }}
+</div>
 
-            <div class="actions">
+<div class="actions">
 
-                <a href="/formulario/{{ f.id }}/perguntas" class="btn-sec">
-                    Editar Perguntas
-                </a>
+    <a href="/formulario/{{ f.id }}/perguntas" class="btn-sec">
+        Editar Perguntas
+    </a>
 
-                <!-- Ajustado para abrir a página externa sem carregar o menu do painel -->
-                <a href="/pesquisa?id_treino={{ f.treinamento_id if f.treinamento_id else f.id }}" class="btn-sec" target="_blank">
-                    Abrir Formulário
-                </a>
+    <a href="/f/{{ f.token }}" class="btn-sec" target="_blank">
+        Abrir Formulário
+    </a>
 
-                <a href="/formulario/excluir/{{ f.id }}"
-                   class="btn-sec btn-danger"
-                   onclick="return confirm('Deseja excluir este formulário?')">
-                    Excluir
-                </a>
+    <a href="/formulario/excluir/{{ f.id }}"
+       class="btn-sec btn-danger"
+       onclick="return confirm('Deseja excluir este formulário?')">
+        Excluir
+    </a>
 
-            </div>
+</div>
 
         </div>
         {% endfor %}
