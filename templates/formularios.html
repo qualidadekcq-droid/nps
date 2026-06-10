@@ -84,6 +84,7 @@
     font-size:.88rem;
     word-break:break-all;
     margin:15px 0;
+    color:#a0a0a0;
 }
 
 .actions{
@@ -143,7 +144,7 @@
         {% for f in formularios %}
         <div class="card-form">
 
-            <span class="badge">{{ f.tipo }}</span>
+            <span class="badge">{{ f.tipo if f.tipo else "NPS" }}</span>
 
             <div class="form-title">{{ f.titulo }}</div>
 
@@ -162,8 +163,9 @@
                 </b>
             </div>
 
+            <!-- Ajustado para exibir o link real da rota de resposta funcional -->
             <div class="link-box">
-                {{ request.host_url }}formulario/{{ f.token }}
+                {{ request.host_url }}pesquisa?id_treino={{ f.treinamento_id if f.treinamento_id else f.id }}
             </div>
 
             <div class="actions">
@@ -172,7 +174,8 @@
                     Editar Perguntas
                 </a>
 
-                <a href="/formulario/{{ f.token }}" class="btn-sec" target="_blank">
+                <!-- Ajustado para abrir a página externa sem carregar o menu do painel -->
+                <a href="/pesquisa?id_treino={{ f.treinamento_id if f.treinamento_id else f.id }}" class="btn-sec" target="_blank">
                     Abrir Formulário
                 </a>
 
