@@ -464,176 +464,65 @@ def salvar_formulario():
 
 
 # =========================
-# RELATÓRIOS / EXPORTS / PESQUISA
+# FORMULÁRIOS
 # =========================
-@app.route("/relatorios")
+@app.route("/formularios")
 @login_required
-def relatorios():
+def formularios():
+    lista = supabase.table("formularios") \
+        .select("*") \
+        .order("created_at", desc=True) \
+        .execute()
+    return render_template("formularios.html", formularios=lista.data)
+
+
+# ROTA QUE FALTAVA: Exibe o formulário customizado para o usuário responder
+@app.route("/formulario/<id>")
+def exibir_formulario(id):
     try:
-        feedbacks = supabase.table("respostas")\
-            .select("nota,comentario,created_at,treinamentos(titulo)")\
-            .order("created_at", desc=True)\
-            .limit(20)\
-            .execute()
-
-        lista = []
-
-        for item in feedbacks.data:
-            lista.append({
-                "nota": item["nota"],
-                "comentario": item["comentario"],
-                "titulo": item["treinamentos"]["titulo"] if item["treinamentos"] else "Treinamento",
-            })
-
-        return render_template("relatorios.html", feedbacks=lista)
-
-    except Exception as e:
-        return str(e)
-
-
-@app.route("/exportar-pdf")
-@login_required
-def exportar_pdf():
-    try:
-        res = supabase.table("treinamentos") \
-            .select("""
-                id,
-                titulo,
-                instrutor,
-                setor,
-                data_treinamento,
-                respostas(
-                    nota,
-                    instrutor
-                )
-            """) \
-            .execute()
-
-        treinamentos = res.data
-
-        output = io.BytesIO()
-        p = canvas.Canvas(output, pagesize=A4)
-
-        width, height = A4
-        margem_esquerda = 50
-        y = height - 60
-
-        p.setFont("Helvetica-Bold", 18)
-        p.drawString(margem_esquerda, y, "Relatório Mensal de NPS")
-        y -= 40
-
-        p.setFont("Helvetica", 11)
-
-        from datetime import datetime
-
-        for t in treinamentos:
-            respostas = t.get("respostas", [])
-
-            media_nota = 0
-            media_instrutor = 0
-
-            if respostas:
-                notas = [r["nota"] for r in respostas if r.get("nota") is not None]
-                notas_instrutor = [r["instrutor"] for r in respostas if r.get("instrutor") is not None]
-
-                if notas:
-                    media_nota = round(sum(notas) / len(notas), 1)
-
-                if notas_instrutor:
-                    media_instrutor = round(sum(notas_instrutor) / len(notas_instrutor), 1)
-
-            data_formatada = ""
-            data_original = t.get("data_treinamento")
-
-            if data_original:
-                try:
-                    data_formatada = datetime.strptime(data_original, "%Y-%m-%d").strftime("%d/%m/%Y")
-                except:
-                    data_formatada = str(data_original)
-
-            texto = (
-                f"Curso: {t['titulo']} | "
-                f"Instrutor: {t['instrutor']} | "
-                f"Setor: {t['setor']} | "
-                f"Data: {data_formatada} | "
-                f"Média NPS: {media_nota} | "
-                f"Média Instrutor: {media_instrutor}/5"
-            )
-
-            linhas = []
-
-            while p.stringWidth(texto, "Helvetica", 11) > 470:
-                corte = len(texto)
-
-                while p.stringWidth(texto[:corte], "Helvetica", 11) > 470:
-                    corte -= 1
-
-                corte = texto[:corte].rfind(" ")
-
-                if corte == -1:
-                    break
-
-                linhas.append(texto[:corte])
-                texto = texto[corte:].strip()
-
-            linhas.append(texto)
-
-            for linha in linhas:
-                p.drawString(margem_esquerda, y, linha)
-                y -= 18
-
-                if y < 60:
-                    p.showPage()
-                    p.setFont("Helvetica", 11)
-                    y = height - 60
-
-            y -= 10
-
-        p.save()
-        output.seek(0)
-
-        return send_file(
-            output,
-            as_attachment=True,
-            download_name="relatorio_nps.pdf",
-            mimetype="application/pdf"
+        # Busca o formulário específico (clima, etc) usando .execute() para evitar quebras se não existir
+        busca_form = supabase.table("formularios").select("*").eq("id", id).execute()
+        
+        if not busca_form.data:
+            return "Formulário não encontrado.", 404
+            
+        # Busca as perguntas vinculadas a este formulário específico
+        busca_perguntas = supabase.table("perguntas").select("*").eq("formulario_id", id).execute()
+        
+        return render_template(
+            "formulario.html", 
+            formulario=busca_form.data[0], 
+            perguntas=busca_perguntas.data
         )
-
     except Exception as e:
-        return f"Erro ao gerar PDF: {str(e)}"
+        return f"Erro ao carregar o formulário: {str(e)}", 500
 
 
-@app.route("/exportar-excel")
-@login_required
-def exportar_excel():
+@app.route("/responder-formulario", methods=["POST"])
+def responder_formulario():
     try:
-        res = supabase.table("respostas") \
-            .select("nota,comentario,clareza,aplicabilidade,instrutor,created_at") \
-            .order("created_at", desc=True) \
-            .execute()
-
-        df = pd.DataFrame(res.data)
-
-        output = io.BytesIO()
-
-        with pd.ExcelWriter(output, engine="openpyxl") as writer:
-            df.to_excel(writer, index=False, sheet_name="Feedbacks")
-
-        output.seek(0)
-
-        return send_file(
-            output,
-            as_attachment=True,
-            download_name="feedbacks.xlsx",
-            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
-
+        formulario_id = request.form.get("formulario_id")
+        
+        # Coleta todas as respostas enviadas dinamicamente
+        for key, value in request.form.items():
+            if key.startswith("pergunta_"):
+                pergunta_id = key.replace("pergunta_", "")
+                
+                dados_resposta = {
+                    "formulario_id": formulario_id,
+                    "pergunta_id": pergunta_id,
+                    "resposta": value
+                }
+                # Insere a resposta na tabela de respostas de formulários customizados
+                supabase.table("respostas_formularios").insert(dados_resposta).execute()
+                
+        return render_template("obrigado.html")
     except Exception as e:
-        return f"Erro ao gerar Excel: {str(e)}"
+        return f"Erro ao salvar respostas: {str(e)}", 500
 
 
 # =========================
-# PESQUISA ANTIGA
+# PESQUISA (NPS Fixo de Treinamentos)
 # =========================
 @app.route("/pesquisa")
 def pesquisa():
@@ -643,11 +532,8 @@ def pesquisa():
         if not id_treino:
             return "Treinamento não informado.", 400
 
-        treino = supabase.table("treinamentos") \
-            .select("titulo") \
-            .eq("id", id_treino) \
-            .single() \
-            .execute()
+        # Tratamento seguro: mudado de .single() para .execute() para evitar o erro PGRST116
+        treino = supabase.table("treinamentos").select("titulo").eq("id", id_treino).execute()
 
         if not treino.data:
             return "Treinamento não encontrado.", 404
@@ -655,11 +541,10 @@ def pesquisa():
         return render_template(
             "feedback_form.html",
             treinamento_id=id_treino,
-            treinamento_nome=treino.data["titulo"]
+            treinamento_nome=treino.data[0]["titulo"]
         )
 
     except Exception as e:
-        print("ERRO DETALHADO DO SUPABASE:", repr(e))
         return f"Erro ao carregar pesquisa: {str(e)}", 500
 
 
@@ -684,7 +569,6 @@ def salvar_pesquisa():
         }
 
         supabase.table("respostas").insert(dados).execute()
-
         return render_template("obrigado.html")
 
     except Exception as e:
