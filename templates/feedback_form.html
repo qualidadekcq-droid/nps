@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -11,139 +10,169 @@
 
 <style>
 
-body{
-    margin:0;
-    padding:20px;
-    min-height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    background:#000;
-    color:#fff;
-    font-family:'Segoe UI',sans-serif;
+body {
+    margin: 0;
+    padding: 12px;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #000;
+    color: #fff;
+    font-family: 'Segoe UI', sans-serif;
+    box-sizing: border-box;
 }
 
-.container{
-    width:100%;
-    max-width:700px;
+.container {
+    width: 100%;
+    max-width: 550px;
+    box-sizing: border-box;
 }
 
-.card{
-    background:#0b0b0b;
-    border:1px solid rgba(250,204,21,.15);
-    border-radius:24px;
-    padding:35px;
-    box-shadow:0 20px 50px rgba(0,0,0,.6);
+.card {
+    background: #0b0b0b;
+    border: 1px solid rgba(250,204,21,.15);
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.6);
+    box-sizing: border-box;
+    width: 100%;
 }
 
-.logo{
-    width:60px;
-    display:block;
-    margin:0 auto 20px auto;
+/* Telas maiores (PC e Tablets) ganham mais espaçamento interno */
+@media (min-width: 480px) {
+    .card {
+        padding: 35px;
+    }
 }
 
-h1{
-    text-align:center;
-    color:#facc15;
-    margin:0;
-    font-size:2rem;
+.logo {
+    width: 60px;
+    display: block;
+    margin: 0 auto 20px auto;
 }
 
-.subtitle{
-    text-align:center;
-    opacity:.7;
-    margin-top:8px;
-    margin-bottom:30px;
+h1 {
+    text-align: center;
+    color: #facc15;
+    margin: 0;
+    font-size: 1.6rem;
+    line-height: 1.3;
 }
 
-.question{
-    background:#111;
-    border:1px solid #1c1c1c;
-    border-radius:16px;
-    padding:18px;
-    margin-bottom:20px;
+@media (min-width: 480px) {
+    h1 {
+        font-size: 2rem;
+    }
 }
 
-.question-title{
-    display:block;
-    font-size:.9rem;
-    font-weight:700;
-    margin-bottom:12px;
-    color:#facc15;
-    text-transform:uppercase;
+.subtitle {
+    text-align: center;
+    opacity: .7;
+    margin-top: 8px;
+    margin-bottom: 30px;
+    font-size: 0.95rem;
 }
 
-.nps-grid{
-    display:flex;
-    flex-wrap:wrap;
-    gap:8px;
-    justify-content:center;
+.question {
+    background: #111;
+    border: 1px solid #1c1c1c;
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 20px;
+    box-sizing: border-box;
 }
 
-.nps-grid label{
-    cursor:pointer;
+.question-title {
+    display: block;
+    font-size: .85rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: #facc15;
+    text-transform: uppercase;
+    line-height: 1.4;
 }
 
-.nps-grid input{
-    display:none;
+.nps-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
 }
 
-.nps-grid span{
-    width:42px;
-    height:42px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:#1a1a1a;
-    border-radius:10px;
-    border:1px solid #2a2a2a;
-    font-weight:700;
-    color:#888;
+.nps-grid label {
+    cursor: pointer;
+    flex: 1 1 calc(20% - 8px); /* Distribui em colunas flexíveis */
+    min-width: 42px;
+    max-width: 50px;
 }
 
-.nps-grid input:checked + span{
-    background:#facc15;
-    color:#000;
-    border-color:#facc15;
+.nps-grid input {
+    display: none;
+}
+
+.nps-grid span {
+    width: 100%;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1a1a1a;
+    border-radius: 10px;
+    border: 1px solid #2a2a2a;
+    font-weight: 700;
+    color: #888;
+    box-sizing: border-box;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.nps-grid input:checked + span {
+    background: #facc15;
+    color: #000;
+    border-color: #facc15;
 }
 
 select,
-textarea{
-    width:100%;
-    background:#111;
-    color:#fff;
-    border:1px solid #222;
-    border-radius:12px;
-    padding:12px;
-    box-sizing:border-box;
+textarea {
+    width: 100%;
+    background: #111;
+    color: #fff;
+    border: 1px solid #222;
+    border-radius: 12px;
+    padding: 14px 12px;
+    box-sizing: border-box;
+    font-size: 1rem;
+    -webkit-appearance: none; /* Remove estilos padrão do Safari iOS */
 }
 
-textarea{
-    resize:vertical;
-    min-height:120px;
+textarea {
+    resize: vertical;
+    min-height: 120px;
 }
 
-.btn{
-    width:100%;
-    padding:16px;
-    border:none;
-    border-radius:14px;
-    background:#facc15;
-    color:#000;
-    font-weight:800;
-    cursor:pointer;
-    font-size:1rem;
+.btn {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 14px;
+    background: #facc15;
+    color: #000;
+    font-weight: 800;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.2s ease;
 }
 
-.btn:hover{
-    background:#ffe36b;
+.btn:hover {
+    background: #ffe36b;
 }
 
-.footer{
-    text-align:center;
-    margin-top:20px;
-    opacity:.45;
-    font-size:.75rem;
+.footer {
+    text-align: center;
+    margin-top: 20px;
+    opacity: .45;
+    font-size: .75rem;
 }
 
 </style>
@@ -171,15 +200,12 @@ textarea{
                    value="{{ treinamento_id }}">
 
             <!-- NPS -->
-
             <div class="question">
-
                 <span class="question-title">
                     De 0 a 10, qual a probabilidade de recomendar este treinamento?
                 </span>
 
                 <div class="nps-grid">
-
                     {% for i in range(11) %}
                     <label>
                         <input type="radio"
@@ -189,15 +215,11 @@ textarea{
                         <span>{{ i }}</span>
                     </label>
                     {% endfor %}
-
                 </div>
-
             </div>
 
             <!-- Clareza -->
-
             <div class="question">
-
                 <span class="question-title">
                     Clareza do conteúdo
                 </span>
@@ -210,13 +232,10 @@ textarea{
                     <option value="4">4</option>
                     <option value="5">5 - Excelente</option>
                 </select>
-
             </div>
 
             <!-- Aplicabilidade -->
-
             <div class="question">
-
                 <span class="question-title">
                     Aplicabilidade do conteúdo
                 </span>
@@ -229,13 +248,10 @@ textarea{
                     <option value="4">4</option>
                     <option value="5">5 - Excelente</option>
                 </select>
-
             </div>
 
             <!-- Instrutor -->
-
             <div class="question">
-
                 <span class="question-title">
                     Avaliação do instrutor
                 </span>
@@ -248,13 +264,10 @@ textarea{
                     <option value="4">4</option>
                     <option value="5">5 - Excelente</option>
                 </select>
-
             </div>
 
             <!-- Comentário -->
-
             <div class="question">
-
                 <span class="question-title">
                     Comentários e sugestões
                 </span>
@@ -262,7 +275,6 @@ textarea{
                 <textarea
                     name="comentario"
                     placeholder="Digite aqui sua opinião..."></textarea>
-
             </div>
 
             <button class="btn" type="submit">
@@ -281,4 +293,3 @@ textarea{
 
 </body>
 </html>
-```
