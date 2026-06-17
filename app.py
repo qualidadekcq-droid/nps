@@ -519,7 +519,174 @@ def salvar_pesquisa():
 
     except Exception as e:
         return f"Erro ao salvar pesquisa: {str(e)}", 500
+# =========================
+# RELATÓRIOS
+# =========================
+@app.route("/relatorios")
+@login_required
+def relatorios():
 
+    feedbacks_raw = supabase.table("respostas") \
+        .select("""
+            nota,
+            comentario,
+            treinamentos(titulo)
+        """) \
+        .order("created_at", desc=True) \
+        .limit(20) \
+        .execute()
+
+    feedbacks = []
+
+    for item in feedbacks_raw.data:
+
+        if not item.get("comentario"):
+            continue
+
+        feedbacks.append({
+            "nota": item["nota"],
+            "comentario": item.get("comentario", ""),
+            "titulo": item["treinamentos"]["titulo"]
+            if item.get("treinamentos")
+            else "Treinamento"
+        })
+
+    return render_template(
+        "relatorios.html",
+        feedbacks=feedbacks
+    )
+@app.route("/exportar-excel")
+@login_required
+def exportar_excel():
+
+    respostas = supabase.table("respostas") \
+        .select("""
+            nota,
+            clareza,
+            aplicabilidade,
+            instrutor,
+            comentario,
+            created_at,
+            treinamentos(titulo)
+        """) \
+        .order("created_at", desc=True) \
+        .execute()
+
+    linhas = []
+
+    for r in respostas.data:
+
+        linhas.append({
+            "Data": r["created_at"],
+            "Treinamento": (
+                r.get("treinamentos", {}).get("titulo", "")
+                if isinstance(r.get("treinamentos"), dict)
+                else ""
+             ),
+            "Nota NPS": r["nota"],
+            "Clareza": r["clareza"],
+            "Aplicabilidade": r["aplicabilidade"],
+            "Instrutor": r["instrutor"],
+            "Comentario": r["comentario"]
+        })
+
+    df = pd.DataFrame(linhas)
+
+    output = io.BytesIO()
+
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df.to_excel(
+            writer,
+            sheet_name="Feedbacks",
+            index=False
+        )
+
+    output.seek(0)
+
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name="relatorio_feedbacks.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+@app.route("/exportar-pdf")
+@login_required
+def exportar_pdf():
+
+    resumo = supabase.table("dashboard_resumo") \
+        .select("*") \
+        .single() \
+        .execute()
+
+    r = resumo.data
+
+    ranking = supabase.table("dashboard_ranking") \
+        .select("*") \
+        .single() \
+        .execute()
+
+    k = ranking.data
+
+    buffer = io.BytesIO()
+
+    pdf = canvas.Canvas(buffer, pagesize=A4)
+
+    pdf.setFont("Helvetica-Bold", 18)
+    pdf.drawString(50, 800, "Relatorio Executivo NPS")
+
+    pdf.setFont("Helvetica", 12)
+
+    pdf.drawString(
+        50,
+        760,
+        f"Total de respostas: {r['total_respostas']}"
+    )
+
+    pdf.drawString(
+        50,
+        735,
+        f"NPS Geral: {r['nps_geral']}"
+    )
+
+    pdf.drawString(
+        50,
+        710,
+        f"Media Instrutores: {r['media_instrutores']}"
+    )
+
+    pdf.drawString(
+        50,
+        685,
+        f"Media Aplicabilidade: {r['media_aplicabilidade']}"
+    )
+    pdf.drawString(
+        50,
+        650,
+        f"Top Instrutor: {k['top_instrutor']}"
+    )
+
+    pdf.drawString(
+        50,
+        625,
+        f"Top Treinamento: {k['top_treinamento']}"
+    )
+
+    pdf.drawString(
+        50,
+        600,
+        f"Pior Treinamento: {k['pior_treinamento']}"
+    )
+
+    pdf.save()
+
+    buffer.seek(0)
+
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="relatorio_nps.pdf",
+        mimetype="application/pdf"
+    )
 
 # =========================
 # START
